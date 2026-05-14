@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --sann-red: #c53112;
+  --sann-red-dk: #9e2609;
+  --sann-beige: #e6d8b8;
+  --sann-cream: #faf6ee;
+  --sann-off: #fdf9f4;
+  --sann-text: #2a1f18;
+  --sann-text-md: #6b4f3a;
+  --sann-text-lt: #9e826a;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--sann-off);
+  color: var(--sann-text);
+  overflow-x: hidden;
+}
+
+/* Reveal-on-scroll utility — element starts hidden, gets `.on` when it enters viewport. */
+.rv {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.rv.on {
+  opacity: 1;
+  transform: none;
+}
+
+/* Mobile sticky bar polish */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .sticky-safe {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 0.65rem);
+  }
+}
+
+/* Make native date inputs match brand */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(28%) sepia(83%) saturate(2476%) hue-rotate(354deg)
+    brightness(91%) contrast(94%);
+  cursor: pointer;
+}
