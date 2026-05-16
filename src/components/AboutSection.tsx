@@ -4,7 +4,7 @@ import { ABOUT_IMAGE_MAIN, ABOUT_IMAGE_SECONDARY } from "@/lib/site-data";
 const features = [
   "Self check-in with smart lock — arrive anytime",
   "High-speed WiFi — perfect for remote work",
-  "Fully equipped kitchen in select properties",
+  "Kitchenette available in select properties",
   "Prime locations near shopping, food & transport",
   "Responsive host — we're always just a message away",
 ];
