@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useBookingModal } from "./BookingModalProvider";
 import MobileNav from "./MobileNav";
+import { LOGO } from "@/lib/site-data";
 
 const NAV_LINKS = [
   { href: "/#properties", label: "Properties" },
@@ -34,8 +36,15 @@ export default function Header() {
             : "bg-transparent"
         }`}
       >
-        <Link href="/" className="font-display text-lg text-sann-text">
-          Sann <span className="text-sann-red italic">Stay</span>
+        <Link href="/" aria-label="Sann Stay home" className="flex items-center">
+          <Image
+            src={LOGO.primary}
+            alt="Sann Stay"
+            width={120}
+            height={36}
+            priority
+            className="h-7 lg:h-8 w-auto"
+          />
         </Link>
 
         <ul className="hidden lg:flex gap-8 list-none">

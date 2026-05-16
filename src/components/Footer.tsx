@@ -1,14 +1,19 @@
 import Link from "next/link";
-import { CONTACT } from "@/lib/site-data";
+import Image from "next/image";
+import { CONTACT, LOGO } from "@/lib/site-data";
 
 export default function Footer() {
   return (
     <footer className="bg-sann-text text-sann-beige-2 px-6 lg:px-20 pt-16 pb-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-8 mb-12">
         <div>
-          <p className="font-display text-xl text-sann-beige mb-3">
-            Sann <span className="italic text-sann-red-lt">Stay</span>
-          </p>
+          <Image
+            src={LOGO.light}
+            alt="Sann Stay"
+            width={140}
+            height={36}
+            className="h-8 w-auto mb-3"
+          />
           <p className="text-[0.82rem] text-sann-beige-2/50 leading-[1.75] max-w-[260px]">
             Boutique accommodation in the best locations of Hat Yai, Thailand.
           </p>

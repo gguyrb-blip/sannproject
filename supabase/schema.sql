@@ -107,8 +107,14 @@ create table if not exists public.checkins (
   status text not null default 'New',
   internal_notes text,
   locker_code text,
-  self_checkin_note text
+  self_checkin_note text,
+  -- Per-guest details + ID/passport file path for each guest.
+  -- Shape: [{ full_name, date_of_birth, id_passport_number, id_passport_file_path }, ...]
+  guests jsonb not null default '[]'::jsonb
 );
+-- Migration for projects created before `guests` was added.
+alter table public.checkins
+  add column if not exists guests jsonb not null default '[]'::jsonb;
 create index if not exists checkins_created_idx
   on public.checkins (created_at desc);
 create index if not exists checkins_status_idx

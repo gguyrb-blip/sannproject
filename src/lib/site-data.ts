@@ -23,8 +23,6 @@ export type Property = {
   status: "open" | "coming-soon";
 };
 
-const UNSPLASH = "https://images.unsplash.com/";
-
 export const PROPERTIES: Property[] = [
   {
     id: "sann-stay-hatyai",
@@ -44,14 +42,16 @@ export const PROPERTIES: Property[] = [
     ],
     price: "฿2,500",
     priceUnit: "/ night",
+    // To replace with real photos: drop files into public/images/hatyai/
+    // (e.g. 1.jpg, 2.jpg ...) and the page will pick them up.
     images: [
-      `${UNSPLASH}photo-1505693416388-ac5ce068fe85?w=1200&q=80`,
-      `${UNSPLASH}photo-1522708323590-d24dbb6b0267?w=1200&q=80`,
-      `${UNSPLASH}photo-1560448204-e02f11c3d0e2?w=1200&q=80`,
-      `${UNSPLASH}photo-1556909114-f6e7ad7d3136?w=1200&q=80`,
-      `${UNSPLASH}photo-1502672260266-1c1ef2d93688?w=1200&q=80`,
-      `${UNSPLASH}photo-1493809842364-78817add7ffb?w=1200&q=80`,
-      `${UNSPLASH}photo-1564013799919-ab600027ffc6?w=1200&q=80`,
+      "/images/hatyai/1.jpg",
+      "/images/hatyai/2.jpg",
+      "/images/hatyai/3.jpg",
+      "/images/hatyai/4.jpg",
+      "/images/hatyai/5.jpg",
+      "/images/hatyai/6.jpg",
+      "/images/hatyai/7.jpg",
     ],
     airbnbUrl: "https://www.airbnb.com/rooms/1672362046238838999",
     bookingUrl:
@@ -76,42 +76,36 @@ export const PROPERTIES: Property[] = [
     price: "฿350",
     priceUnit: "/ bed / night",
     images: [
-      `${UNSPLASH}photo-1555854877-bab0e564b8d5?w=1200&q=80`,
-      `${UNSPLASH}photo-1559599189-fe84dea4eb79?w=1200&q=80`,
-      `${UNSPLASH}photo-1540541338287-41700207dee6?w=1200&q=80`,
-      `${UNSPLASH}photo-1611892440504-42a792e24d32?w=1200&q=80`,
+      "/images/thungsao/1.jpg",
+      "/images/thungsao/2.jpg",
+      "/images/thungsao/3.jpg",
+      "/images/thungsao/4.jpg",
     ],
     status: "coming-soon",
   },
 ];
 
-export const HERO_IMAGE =
-  "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=2000&q=80";
-export const HERO_IMAGE_MOBILE =
-  "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1000&q=80";
+// LOGO + HERO  ----------------------------------------------------
+// Replace the placeholder with your real SVG/PNG logo once uploaded.
+// We default to text-based wordmark while the image is missing.
+export const LOGO = {
+  // Dark logo on light background (header)
+  primary: "/images/logo.svg",
+  // Light logo on dark background (footer)
+  light: "/images/logo-light.svg",
+};
 
-export const ABOUT_IMAGE_MAIN =
-  "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=1200&q=80";
-export const ABOUT_IMAGE_SECONDARY =
-  "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=900&q=80";
+export const HERO_IMAGE = "/images/hero.jpg";
+export const HERO_IMAGE_MOBILE = "/images/hero.jpg";
+
+export const ABOUT_IMAGE_MAIN = "/images/about-main.jpg";
+export const ABOUT_IMAGE_SECONDARY = "/images/about-secondary.jpg";
 
 export const GALLERY_IMAGES = [
-  {
-    label: "Bedroom",
-    src: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=900&q=80",
-  },
-  {
-    label: "Living Room",
-    src: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=900&q=80",
-  },
-  {
-    label: "Kitchen",
-    src: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=900&q=80",
-  },
-  {
-    label: "Suite",
-    src: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=900&q=80",
-  },
+  { label: "Bedroom", src: "/images/gallery-1.jpg" },
+  { label: "Living Room", src: "/images/gallery-2.jpg" },
+  { label: "Kitchen", src: "/images/gallery-3.jpg" },
+  { label: "Suite", src: "/images/gallery-4.jpg" },
 ];
 
 export const TESTIMONIALS = [
@@ -135,49 +129,64 @@ export const TESTIMONIALS = [
   },
 ];
 
+// Ordered by importance for a first-time guest: how to book → check in
+// → enter → arrival logistics → policies.
 export const FAQS = [
   {
+    q: "How can I book?",
+    a: "You can book via Airbnb, Booking.com, LINE @245qdfzu, or the Book Now button on this website. Direct bookings get the best rates!",
+  },
+  {
+    q: "How do I check in?",
+    a: "Before your stay, guests are required to complete an online pre check-in form. We will send the check-in link to your email or through the booking platform you used, such as Airbnb or Booking.com. You will be asked to provide your guest details and upload a valid ID card or passport.\n\nFor Thai guests, a national ID card is required. For international guests, a passport is required.\n\nThis information is needed for guest registration and accommodation reporting in accordance with Thai regulations, including TM.30 reporting for foreign guests and guest register records where applicable.",
+  },
+  {
+    q: "How do I enter the house?",
+    a: "SANN Stay Hatyai uses a self check-in system with a digital door lock.\n\nYour personal door lock code will be sent to you 1 day before your check-in date. Once you arrive, you can enter the house by using the code on the digital door lock.\n\nPlease keep your code private and do not share it with anyone outside your booking group.",
+  },
+  {
     q: "What are the check-in and check-out times?",
-    a: "Check-in from 15:00 onwards. Check-out before 12:00 noon. Early check-in or late check-out can be arranged — just let us know in advance.",
+    a: "Check-in from 15:00 onwards. Check-out before 12:00 noon. Early check-in or late check-out can be arranged — just let us know in advance and subject to availability.",
   },
   {
     q: "Is there parking available?",
-    a: "Street parking is available near the property. We recommend asking us for specific parking tips before your arrival.",
+    a: "Street parking is available. We have one reserved space in front of the house, with additional parking along the nearby street when available. Please ask us for parking guidance before arrival.",
+  },
+  {
+    q: "Is the WiFi fast enough for working?",
+    a: "Yes! We have high-speed WiFi (100+ Mbps) — perfect for video calls and remote work.",
   },
   {
     q: "Are pets allowed?",
     a: "We're sorry, pets are not allowed at any Sann Stay property to ensure cleanliness for all guests.",
   },
   {
-    q: "How can I book?",
-    a: "You can book via Airbnb, Booking.com, LINE @sannstay, or the Book Now button on this website. Direct bookings get the best rates!",
-  },
-  {
     q: "What's the cancellation policy?",
-    a: "Free cancellation up to 3 days before check-in for direct bookings. For Airbnb/Booking.com, their respective policies apply.",
-  },
-  {
-    q: "Is the WiFi fast enough for working?",
-    a: "Yes! We have high-speed WiFi (100+ Mbps) — perfect for video calls and remote work.",
+    a: "Our cancellation policy may vary depending on the date, rate plan, and booking platform. For direct bookings, free cancellation is usually available up to 3 days before check-in. For Airbnb and Booking.com, please refer to the policy displayed on each platform before confirming your stay.",
   },
 ];
 
+// LINE Official Account: @245qdfzu
+// Both add-friend and chat links use the standard line.me URL with the
+// %40 (URL-encoded "@") prefix so it works on iOS / Android / desktop.
 export const CONTACT = {
   email: "sannascent.co@gmail.com",
-  lineUrl: "https://lin.ee/OTkI5J5",
-  lineChatUrl: "https://lin.ee/pM1OqtX",
-  lineHandle: "@sannstay",
+  lineUrl: "https://line.me/R/ti/p/%40245qdfzu",
+  lineChatUrl: "https://line.me/R/ti/p/%40245qdfzu",
+  lineHandle: "@245qdfzu",
 };
 
-// Replace these with your real Google Maps embed + open URL.
+// Sann Stay Hatyai — 7.006212325779094, 100.47327252883606
+// Update by replacing the q= coordinates if the property moves.
 export const GOOGLE_MAPS_EMBED_URL =
-  "https://www.google.com/maps?q=Hat+Yai,+Songkhla,+Thailand&output=embed";
-export const GOOGLE_MAPS_OPEN_URL =
-  "https://www.google.com/maps?q=Hat+Yai,+Songkhla,+Thailand";
+  "https://www.google.com/maps?q=7.006212325779094,100.47327252883606&hl=en&z=17&output=embed";
+export const GOOGLE_MAPS_OPEN_URL = "https://maps.app.goo.gl/JM118vZqP78M8Hm88";
 
 export const NEARBY_PLACES = [
-  { name: "Lee Garden Plaza", desc: "Shopping & dining · 4-min walk" },
-  { name: "Kim Yong Market", desc: "Famous local market · 8-min walk" },
-  { name: "Hat Yai local food area", desc: "Street food heaven · nearby" },
-  { name: "Cafés and local restaurants", desc: "Within walking distance" },
+  { name: "Lee Garden Plaza", desc: "Shopping & dining · ~5-min walk" },
+  { name: "Kim Yong Market", desc: "Famous local market · ~7-min walk" },
+  { name: "Central Hat Yai", desc: "Department store & food court · short drive" },
+  { name: "Asean Night Bazaar", desc: "Street food & shopping · short drive" },
+  { name: "Hat Yai Municipal Park", desc: "Park & scenic viewpoint · short drive" },
+  { name: "Hat Yai Train Station", desc: "Main rail hub · short drive" },
 ];

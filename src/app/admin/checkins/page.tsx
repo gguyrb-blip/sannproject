@@ -159,26 +159,53 @@ export default async function CheckinsAdminPage({
                   {row.nationality || "—"}
                 </p>
                 <p>
-                  <strong className="text-sann-text">ID / Passport #:</strong>{" "}
-                  {row.id_passport_number || "—"}
-                </p>
-                <p>
                   <strong className="text-sann-text">Special requests:</strong>{" "}
                   {row.special_requests || "—"}
                 </p>
-                {row.id_passport_file_path && (
-                  <p>
-                    <strong className="text-sann-text">ID file:</strong>{" "}
-                    <a
-                      href={`/api/admin/guest-document?path=${encodeURIComponent(row.id_passport_file_path)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sann-red underline"
-                    >
-                      Open signed link →
-                    </a>
-                  </p>
-                )}
+                <div>
+                  <strong className="text-sann-text">Guests ({row.guests?.length ?? 0}):</strong>
+                  {row.guests && row.guests.length > 0 ? (
+                    <ol className="list-decimal pl-5 mt-1 space-y-1.5">
+                      {row.guests.map((g, idx) => (
+                        <li key={idx}>
+                          <span className="text-sann-text">{g.full_name}</span>
+                          {g.date_of_birth && (
+                            <span className="text-sann-text-lt"> · DOB {g.date_of_birth}</span>
+                          )}
+                          {g.id_passport_number && (
+                            <span className="text-sann-text-lt"> · ID {g.id_passport_number}</span>
+                          )}
+                          {g.id_passport_file_path && (
+                            <>
+                              {" · "}
+                              <a
+                                href={`/api/admin/guest-document?path=${encodeURIComponent(g.id_passport_file_path)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sann-red underline"
+                              >
+                                Document
+                              </a>
+                            </>
+                          )}
+                        </li>
+                      ))}
+                    </ol>
+                  ) : row.id_passport_file_path ? (
+                    <p className="mt-1">
+                      <a
+                        href={`/api/admin/guest-document?path=${encodeURIComponent(row.id_passport_file_path)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sann-red underline"
+                      >
+                        Open primary document →
+                      </a>
+                    </p>
+                  ) : (
+                    <span className="text-sann-text-lt"> —</span>
+                  )}
+                </div>
               </div>
               <div className="space-y-3">
                 <label className="flex flex-col gap-1">

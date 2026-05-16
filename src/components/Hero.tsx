@@ -38,8 +38,7 @@ export default function Hero() {
           feels like <em className="italic text-sann-red">home</em>
         </h1>
         <p className="font-serif italic text-base lg:text-lg text-sann-text-md leading-[1.7] mb-8 max-w-[380px] font-light">
-          Warm like home, convenient like a hotel — stay in style with Sann
-          Stay
+          Stay in style with Sann Stay
         </p>
         <div className="flex gap-3 flex-wrap">
           <button

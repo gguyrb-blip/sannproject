@@ -60,6 +60,13 @@ export type BookingInquiry = {
   internal_notes: string | null;
 };
 
+export type CheckinGuest = {
+  full_name: string;
+  date_of_birth: string | null;
+  id_passport_number: string | null;
+  id_passport_file_path: string | null;
+};
+
 export type Checkin = {
   id: string;
   created_at: string;
@@ -81,4 +88,5 @@ export type Checkin = {
   internal_notes: string | null;
   locker_code: string | null;
   self_checkin_note: string | null;
+  guests: CheckinGuest[];
 };

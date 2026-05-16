@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BOOKING_CHANNELS } from "@/lib/types";
 
 const today = () => new Date().toISOString().split("T")[0];
@@ -10,11 +10,26 @@ const tomorrow = () => {
   return d.toISOString().split("T")[0];
 };
 
+const MAX_GUESTS = 12;
+
+type GuestRow = {
+  full_name: string;
+  date_of_birth: string;
+  id_passport_number: string;
+  file: File | null;
+};
+
+const emptyGuest = (): GuestRow => ({
+  full_name: "",
+  date_of_birth: "",
+  id_passport_number: "",
+  file: null,
+});
+
 export default function CheckinForm() {
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [file, setFile] = useState<File | null>(null);
 
   const [form, setForm] = useState({
     booking_name: "",
@@ -22,15 +37,31 @@ export default function CheckinForm() {
     check_in_date: today(),
     check_out_date: tomorrow(),
     number_of_guests: 2,
-    guest_full_name: "",
     phone: "",
     email: "",
     nationality: "",
-    id_passport_number: "",
     estimated_arrival_time: "",
     special_requests: "",
     consent: false,
   });
+
+  const [guests, setGuests] = useState<GuestRow[]>(() => [
+    emptyGuest(),
+    emptyGuest(),
+  ]);
+
+  // Resize guests array when number_of_guests changes — keeping previously
+  // entered data for indexes that still fit.
+  useEffect(() => {
+    setGuests((prev) => {
+      const n = Math.max(1, Math.min(MAX_GUESTS, form.number_of_guests || 1));
+      if (prev.length === n) return prev;
+      if (prev.length < n) {
+        return [...prev, ...Array.from({ length: n - prev.length }, emptyGuest)];
+      }
+      return prev.slice(0, n);
+    });
+  }, [form.number_of_guests]);
 
   if (done) {
     return (
@@ -44,26 +75,60 @@ export default function CheckinForm() {
     );
   }
 
+  const setGuest = (i: number, patch: Partial<GuestRow>) =>
+    setGuests((prev) => prev.map((g, idx) => (idx === i ? { ...g, ...patch } : g)));
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
     if (!form.consent) {
       setError("Please confirm the consent checkbox before submitting.");
       return;
     }
-    if (!file) {
-      setError("Please upload a photo of your ID or passport.");
-      return;
+
+    for (let i = 0; i < guests.length; i += 1) {
+      const g = guests[i];
+      if (!g.full_name.trim()) {
+        setError(`Guest ${i + 1}: please enter the full name.`);
+        return;
+      }
+      if (!g.date_of_birth) {
+        setError(`Guest ${i + 1}: please enter the date of birth.`);
+        return;
+      }
+      if (!g.id_passport_number.trim()) {
+        setError(`Guest ${i + 1}: please enter the ID / passport number.`);
+        return;
+      }
+      if (!g.file) {
+        setError(`Guest ${i + 1}: please upload an ID / passport photo.`);
+        return;
+      }
+      if (g.file.size > 10 * 1024 * 1024) {
+        setError(`Guest ${i + 1}: file is too large (max 10 MB).`);
+        return;
+      }
     }
-    if (file.size > 10 * 1024 * 1024) {
-      setError("File is too large (max 10 MB).");
-      return;
-    }
+
     setSubmitting(true);
     try {
       const data = new FormData();
-      data.append("file", file);
-      data.append("payload", JSON.stringify(form));
+      data.append(
+        "payload",
+        JSON.stringify({
+          ...form,
+          guests: guests.map((g) => ({
+            full_name: g.full_name.trim(),
+            date_of_birth: g.date_of_birth,
+            id_passport_number: g.id_passport_number.trim(),
+          })),
+        }),
+      );
+      guests.forEach((g, i) => {
+        if (g.file) data.append(`file_${i}`, g.file);
+      });
+
       const res = await fetch("/api/checkins", { method: "POST", body: data });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
@@ -80,7 +145,7 @@ export default function CheckinForm() {
   return (
     <form
       onSubmit={onSubmit}
-      className="max-w-2xl mx-auto bg-white border border-sann-red/10 rounded p-6 lg:p-10 shadow-[0_10px_36px_rgba(42,31,24,0.06)] space-y-4"
+      className="max-w-2xl mx-auto bg-white border border-sann-red/10 rounded p-6 lg:p-10 shadow-[0_10px_36px_rgba(42,31,24,0.06)] space-y-5"
     >
       <Field label="Booking name (as on Airbnb / Booking.com)" wide>
         <input
@@ -112,12 +177,15 @@ export default function CheckinForm() {
           <input
             type="number"
             min={1}
-            max={20}
+            max={MAX_GUESTS}
             value={form.number_of_guests}
             onChange={(e) =>
               setForm((f) => ({
                 ...f,
-                number_of_guests: Number(e.target.value),
+                number_of_guests: Math.max(
+                  1,
+                  Math.min(MAX_GUESTS, Number(e.target.value) || 1),
+                ),
               }))
             }
             className={inputCls}
@@ -146,18 +214,7 @@ export default function CheckinForm() {
             required
           />
         </Field>
-        <Field label="Guest full name" wide>
-          <input
-            type="text"
-            value={form.guest_full_name}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, guest_full_name: e.target.value }))
-            }
-            className={inputCls}
-            required
-          />
-        </Field>
-        <Field label="Phone number">
+        <Field label="Primary contact phone">
           <input
             type="tel"
             value={form.phone}
@@ -168,7 +225,7 @@ export default function CheckinForm() {
             required
           />
         </Field>
-        <Field label="Email">
+        <Field label="Primary contact email">
           <input
             type="email"
             value={form.email}
@@ -190,18 +247,7 @@ export default function CheckinForm() {
             required
           />
         </Field>
-        <Field label="ID / Passport number">
-          <input
-            type="text"
-            value={form.id_passport_number}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, id_passport_number: e.target.value }))
-            }
-            className={inputCls}
-            required
-          />
-        </Field>
-        <Field label="Estimated arrival time" wide>
+        <Field label="Estimated arrival time">
           <input
             type="text"
             placeholder="e.g. 16:30 by car"
@@ -218,6 +264,81 @@ export default function CheckinForm() {
         </Field>
       </div>
 
+      <div>
+        <p className="text-[0.62rem] tracking-[0.24em] uppercase text-sann-red font-semibold mb-1">
+          Guest Details
+        </p>
+        <p className="text-xs text-sann-text-md mb-3">
+          Please fill out the information and upload an ID/passport for every
+          guest staying.
+        </p>
+
+        <div className="space-y-4">
+          {guests.map((g, i) => (
+            <fieldset
+              key={i}
+              className="border border-sann-red/15 rounded p-4 bg-sann-cream/30"
+            >
+              <legend className="px-2 text-[0.62rem] tracking-[0.24em] uppercase text-sann-red font-semibold">
+                Guest {i + 1}
+              </legend>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Field label="Full name" wide>
+                  <input
+                    type="text"
+                    value={g.full_name}
+                    onChange={(e) => setGuest(i, { full_name: e.target.value })}
+                    className={inputCls}
+                    required
+                  />
+                </Field>
+                <Field label="Date of birth">
+                  <input
+                    type="date"
+                    value={g.date_of_birth}
+                    onChange={(e) =>
+                      setGuest(i, { date_of_birth: e.target.value })
+                    }
+                    className={inputCls}
+                    required
+                  />
+                </Field>
+                <Field label="ID / Passport number">
+                  <input
+                    type="text"
+                    value={g.id_passport_number}
+                    onChange={(e) =>
+                      setGuest(i, { id_passport_number: e.target.value })
+                    }
+                    className={inputCls}
+                    required
+                  />
+                </Field>
+              </div>
+              <label className="flex flex-col gap-1 mt-3">
+                <span className="text-[0.6rem] tracking-[0.16em] uppercase text-sann-red font-semibold">
+                  Upload ID / passport
+                </span>
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  onChange={(e) =>
+                    setGuest(i, { file: e.target.files?.[0] ?? null })
+                  }
+                  className="block w-full text-sm text-sann-text-md file:mr-3 file:px-4 file:py-2 file:rounded-sm file:border-0 file:bg-sann-red file:text-white file:font-semibold file:text-[0.65rem] file:tracking-[0.14em] file:uppercase"
+                  required
+                />
+                {g.file && (
+                  <span className="text-xs text-sann-text-lt mt-1">
+                    {g.file.name} ({Math.round(g.file.size / 1024)} KB)
+                  </span>
+                )}
+              </label>
+            </fieldset>
+          ))}
+        </div>
+      </div>
+
       <Field label="Special requests">
         <textarea
           value={form.special_requests}
@@ -227,21 +348,6 @@ export default function CheckinForm() {
           rows={3}
           className={inputCls}
         />
-      </Field>
-
-      <Field label="Upload ID / passport image" wide>
-        <input
-          type="file"
-          accept="image/*,application/pdf"
-          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          className="block w-full text-sm text-sann-text-md file:mr-3 file:px-4 file:py-2 file:rounded-sm file:border-0 file:bg-sann-red file:text-white file:font-semibold file:text-[0.7rem] file:tracking-[0.14em] file:uppercase"
-          required
-        />
-        {file && (
-          <span className="text-xs text-sann-text-lt mt-1">
-            {file.name} ({Math.round(file.size / 1024)} KB)
-          </span>
-        )}
       </Field>
 
       <label className="flex gap-3 items-start cursor-pointer">
@@ -255,8 +361,9 @@ export default function CheckinForm() {
         />
         <span className="text-xs text-sann-text-md leading-[1.6]">
           I confirm that the information provided is accurate and agree that
-          SANN may use this information for check-in and guest verification
-          purposes.
+          SANN may use this information for check-in, guest verification, and
+          accommodation reporting purposes. I also acknowledge and agree to
+          follow the House Rules during my stay.
         </span>
       </label>
 
