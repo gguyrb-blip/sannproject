@@ -40,10 +40,10 @@ export default function Header() {
           <Image
             src={LOGO.primary}
             alt="Sann Stay"
-            width={120}
-            height={36}
+            width={56}
+            height={56}
             priority
-            className="h-7 lg:h-8 w-auto"
+            className="h-10 lg:h-12 w-auto"
           />
         </Link>
 

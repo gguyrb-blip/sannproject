@@ -10,9 +10,9 @@ export default function Footer() {
           <Image
             src={LOGO.light}
             alt="Sann Stay"
-            width={140}
-            height={36}
-            className="h-8 w-auto mb-3"
+            width={64}
+            height={64}
+            className="h-14 w-auto mb-3"
           />
           <p className="text-[0.82rem] text-sann-beige-2/50 leading-[1.75] max-w-[260px]">
             Boutique accommodation in the best locations of Hat Yai, Thailand.

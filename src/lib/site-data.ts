@@ -42,16 +42,12 @@ export const PROPERTIES: Property[] = [
     ],
     price: "฿2,500",
     priceUnit: "/ night",
-    // To replace with real photos: drop files into public/images/hatyai/
-    // (e.g. 1.jpg, 2.jpg ...) and the page will pick them up.
     images: [
-      "/images/hatyai/1.jpg",
-      "/images/hatyai/2.jpg",
-      "/images/hatyai/3.jpg",
-      "/images/hatyai/4.jpg",
-      "/images/hatyai/5.jpg",
-      "/images/hatyai/6.jpg",
-      "/images/hatyai/7.jpg",
+      "/images/hatyai/1.png",
+      "/images/hatyai/2.png",
+      "/images/hatyai/3.png",
+      "/images/hatyai/4.png",
+      "/images/hatyai/5.png",
     ],
     airbnbUrl: "https://www.airbnb.com/rooms/1672362046238838999",
     bookingUrl:
@@ -75,35 +71,39 @@ export const PROPERTIES: Property[] = [
     ],
     price: "฿350",
     priceUnit: "/ bed / night",
+    // Placeholder: showing Sann Hatyai photos until real Thung Sao
+    // photos arrive. Replace with /images/thungsao/1.png, 2.png ... when
+    // the new files are uploaded.
     images: [
-      "/images/thungsao/1.jpg",
-      "/images/thungsao/2.jpg",
-      "/images/thungsao/3.jpg",
-      "/images/thungsao/4.jpg",
+      "/images/hatyai/4.png",
+      "/images/hatyai/5.png",
+      "/images/hatyai/1.png",
+      "/images/hatyai/2.png",
     ],
     status: "coming-soon",
   },
 ];
 
 // LOGO + HERO  ----------------------------------------------------
-// Replace the placeholder with your real SVG/PNG logo once uploaded.
-// We default to text-based wordmark while the image is missing.
+// Real PNG logo uploaded by the project owner. The header uses the
+// brand-coloured wordmark; the footer uses the same on dark background
+// (swap to a white variant by replacing /images/logo-light.png).
 export const LOGO = {
-  // Dark logo on light background (header)
-  primary: "/images/logo.svg",
-  // Light logo on dark background (footer)
-  light: "/images/logo-light.svg",
+  primary: "/images/logo.png",
+  light: "/images/logo-light.png",
 };
 
-export const HERO_IMAGE = "/images/hero.jpg";
-export const HERO_IMAGE_MOBILE = "/images/hero.jpg";
+export const HERO_IMAGE = "/images/hero.png";
+export const HERO_IMAGE_MOBILE = "/images/hero.png";
 
-export const ABOUT_IMAGE_MAIN = "/images/about-main.jpg";
-export const ABOUT_IMAGE_SECONDARY = "/images/about-secondary.jpg";
+// Reuse the best two interior shots for the About section until the
+// brand sends dedicated About photos.
+export const ABOUT_IMAGE_MAIN = "/images/hatyai/2.png";
+export const ABOUT_IMAGE_SECONDARY = "/images/hatyai/3.png";
 
 export const GALLERY_IMAGES = [
   { label: "Bedroom", src: "/images/gallery-1.jpg" },
-  { label: "Living Room", src: "/images/gallery-2.jpg" },
+  { label: "Living Room", src: "/images/gallery-2.png" },
   { label: "Kitchen", src: "/images/gallery-3.jpg" },
   { label: "Suite", src: "/images/gallery-4.jpg" },
 ];
