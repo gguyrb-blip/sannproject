@@ -29,11 +29,7 @@ export const CHECKIN_STATUSES: CheckinStatus[] = [
 ];
 
 export const PREFERRED_UNITS = [
-  "SANN Studio",
-  "SANN Family Suite",
-  "Full House",
-  "SANN Thung Sao Hostel",
-  "Not sure yet",
+  "SANN Stay Hatyai - 4 BR House - 4 min to Leegarden",
 ] as const;
 
 export const BOOKING_CHANNELS = [

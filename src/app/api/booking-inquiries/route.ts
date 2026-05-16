@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { sendNotificationEmail, formatFields } from "@/lib/email";
 
 export const runtime = "nodejs";
 
@@ -49,6 +50,25 @@ export async function POST(request: Request) {
       { status: 500 },
     );
   }
+
+  // Fire-and-forget email notification to the hotel inbox.
+  await sendNotificationEmail({
+    subject: `New booking inquiry — ${guest_name}`,
+    text:
+      "A new booking inquiry was submitted on sannstay.com.\n\n" +
+      formatFields({
+        guest_name,
+        phone_line: body.phone_line,
+        email: body.email,
+        preferred_unit: body.preferred_unit,
+        check_in_date: body.check_in_date,
+        check_out_date: body.check_out_date,
+        number_of_guests: body.number_of_guests,
+        message: body.message,
+      }) +
+      "\n\nView all inquiries: https://sannstay.com/admin",
+    replyTo: body.email?.trim() || undefined,
+  });
 
   return NextResponse.json({ ok: true });
 }

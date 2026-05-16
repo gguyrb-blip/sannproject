@@ -18,7 +18,7 @@ export default function BookingModal() {
   const [error, setError] = useState<string | null>(null);
 
   const [form, setForm] = useState({
-    preferred_unit: preferredUnit ?? "Sann Stay Hatyai",
+    preferred_unit: preferredUnit ?? PREFERRED_UNITS[0],
     number_of_guests: 2,
     check_in_date: todayISO(),
     check_out_date: tomorrowISO(),
@@ -116,21 +116,10 @@ export default function BookingModal() {
             onSubmit={onSubmit}
             className="px-6 pt-5 pb-5 max-h-[70vh] overflow-y-auto"
           >
-            <Field label="Preferred Unit">
-              <select
-                value={form.preferred_unit}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, preferred_unit: e.target.value }))
-                }
-                className={inputCls}
-              >
-                {PREFERRED_UNITS.map((u) => (
-                  <option key={u}>{u}</option>
-                ))}
-                {!(PREFERRED_UNITS as readonly string[]).includes(
-                  form.preferred_unit,
-                ) && <option>{form.preferred_unit}</option>}
-              </select>
+            <Field label="Property">
+              <div className="border-[1.5px] border-sann-red/15 bg-sann-cream/40 px-3 py-2 rounded-sm text-sm text-sann-text">
+                {form.preferred_unit}
+              </div>
             </Field>
             <Field label="Guests">
               <select

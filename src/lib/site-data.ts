@@ -102,10 +102,10 @@ export const ABOUT_IMAGE_MAIN = "/images/hatyai/2.png";
 export const ABOUT_IMAGE_SECONDARY = "/images/hatyai/3.png";
 
 export const GALLERY_IMAGES = [
-  { label: "Bedroom", src: "/images/gallery-1.jpg" },
+  { label: "Kitchenette", src: "/images/gallery-1.jpg" },
   { label: "Living Room", src: "/images/gallery-2.png" },
-  { label: "Kitchen", src: "/images/gallery-3.jpg" },
-  { label: "Suite", src: "/images/gallery-4.jpg" },
+  { label: "Exterior", src: "/images/gallery-3.jpg" },
+  { label: "Bedroom", src: "/images/gallery-4.jpg" },
 ];
 
 export const TESTIMONIALS = [

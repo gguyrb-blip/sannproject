@@ -18,7 +18,7 @@ export default function BookForm() {
     check_in_date: todayISO(),
     check_out_date: tomorrowISO(),
     number_of_guests: 2,
-    preferred_unit: "Sann Stay Hatyai",
+    preferred_unit: PREFERRED_UNITS[0],
     guest_name: "",
     phone_line: "",
     email: "",
@@ -103,18 +103,10 @@ export default function BookForm() {
             required
           />
         </Field>
-        <Field label="Preferred unit">
-          <select
-            value={form.preferred_unit}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, preferred_unit: e.target.value }))
-            }
-            className={inputCls}
-          >
-            {PREFERRED_UNITS.map((u) => (
-              <option key={u}>{u}</option>
-            ))}
-          </select>
+        <Field label="Property">
+          <div className="border-[1.5px] border-sann-red/15 bg-sann-cream/40 px-3 py-2.5 rounded-sm text-sm text-sann-text">
+            {form.preferred_unit}
+          </div>
         </Field>
         <Field label="Guest name" wide>
           <input

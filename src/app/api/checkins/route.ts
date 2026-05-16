@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { sendNotificationEmail, formatFields } from "@/lib/email";
 
 export const runtime = "nodejs";
 
@@ -171,6 +172,40 @@ export async function POST(request: Request) {
       { status: 500 },
     );
   }
+
+  // Notify the hotel inbox. Full ID documents are NOT attached — they
+  // live in the private Supabase bucket and are accessible via signed
+  // URLs from the admin dashboard.
+  const guestSummary = guestsWithFiles
+    .map(
+      (g, i) =>
+        `  ${i + 1}. ${g.full_name}` +
+        (g.date_of_birth ? ` · DOB ${g.date_of_birth}` : "") +
+        (g.id_passport_number ? ` · ID ${g.id_passport_number}` : ""),
+    )
+    .join("\n");
+
+  await sendNotificationEmail({
+    subject: `New online check-in — ${primary.full_name}`,
+    text:
+      "A guest just completed the online check-in form.\n\n" +
+      formatFields({
+        booking_name: payload.booking_name,
+        booking_channel: payload.booking_channel,
+        check_in_date: payload.check_in_date,
+        check_out_date: payload.check_out_date,
+        number_of_guests: payload.number_of_guests,
+        phone: payload.phone,
+        email: payload.email,
+        nationality: payload.nationality,
+        estimated_arrival_time: payload.estimated_arrival_time,
+        special_requests: payload.special_requests,
+      }) +
+      `\n\nGuests (${guestsWithFiles.length}):\n${guestSummary}` +
+      "\n\nID/passport files are stored in Supabase Storage and can be" +
+      " viewed (signed link, 5-min expiry) from https://sannstay.com/admin/checkins",
+    replyTo: payload.email?.trim() || undefined,
+  });
 
   return NextResponse.json({ ok: true });
 }

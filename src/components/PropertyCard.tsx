@@ -11,7 +11,11 @@ export default function PropertyCard({ property }: { property: Property }) {
   return (
     <article className="rv bg-white rounded border border-sann-red/[0.06] shadow-[0_2px_12px_rgba(42,31,24,0.05)] hover:-translate-y-1 hover:shadow-[0_16px_44px_rgba(42,31,24,0.1)] transition-all overflow-hidden">
       <div className="relative">
-        <ImageSlider images={property.images} />
+        <ImageSlider
+          images={property.images}
+          blur={!isOpen}
+          overlay={!isOpen ? "Real photos coming soon" : undefined}
+        />
         <span
           className={`absolute top-3 left-3 z-[3] text-white text-[0.55rem] tracking-[0.16em] uppercase px-2 py-1 font-bold ${
             isOpen ? "bg-sann-red" : "bg-sann-text"
@@ -51,7 +55,7 @@ export default function PropertyCard({ property }: { property: Property }) {
           </div>
           {isOpen ? (
             <button
-              onClick={() => open(property.name)}
+              onClick={() => open()}
               className="text-[0.65rem] tracking-[0.14em] uppercase text-sann-red font-semibold border-b border-sann-red/30 pb-px"
             >
               Book Now

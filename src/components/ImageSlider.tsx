@@ -2,7 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 
-export default function ImageSlider({ images }: { images: string[] }) {
+export default function ImageSlider({
+  images,
+  blur = false,
+  overlay,
+}: {
+  images: string[];
+  blur?: boolean;
+  overlay?: string;
+}) {
   const [index, setIndex] = useState(0);
   const count = images.length;
   const touchStartX = useRef(0);
@@ -32,11 +40,19 @@ export default function ImageSlider({ images }: { images: string[] }) {
         {images.map((src, i) => (
           <div
             key={i}
-            className="min-w-full h-full bg-cover bg-center"
+            className={`min-w-full h-full bg-cover bg-center ${blur ? "blur-md scale-110" : ""}`}
             style={{ backgroundImage: `url('${src}')` }}
           />
         ))}
       </div>
+
+      {overlay && (
+        <div className="absolute inset-0 z-[1] flex items-center justify-center pointer-events-none">
+          <span className="bg-sann-text/70 text-white font-display text-sm sm:text-base px-5 py-2.5 rounded-sm backdrop-blur-sm">
+            {overlay}
+          </span>
+        </div>
+      )}
 
       <button
         onClick={() => go(-1)}
