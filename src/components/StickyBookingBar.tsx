@@ -1,11 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useBookingModal } from "./BookingModalProvider";
 
 export default function StickyBookingBar() {
   const [show, setShow] = useState(false);
-  const { open } = useBookingModal();
 
   useEffect(() => {
     const onScroll = () => {
@@ -42,12 +41,12 @@ export default function StickyBookingBar() {
             </span>
           </div>
         </div>
-        <button
-          onClick={() => open()}
+        <Link
+          href="/book"
           className="bg-sann-red text-white px-6 py-2.5 rounded-sm text-[0.7rem] tracking-[0.16em] uppercase font-bold whitespace-nowrap"
         >
           Book Now
-        </button>
+        </Link>
       </div>
     </div>
   );

@@ -1,13 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { HERO_IMAGE, HERO_IMAGE_MOBILE } from "@/lib/site-data";
-import { useBookingModal } from "./BookingModalProvider";
 
 export default function Hero() {
   const [loaded, setLoaded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const { open } = useBookingModal();
 
   useEffect(() => {
     setIsMobile(window.innerWidth <= 768);
@@ -41,12 +40,12 @@ export default function Hero() {
           Stay in style with Sann Stay
         </p>
         <div className="flex gap-3 flex-wrap">
-          <button
-            onClick={() => open()}
+          <Link
+            href="/book"
             className="bg-sann-red hover:bg-sann-red-dk text-white px-7 py-3 rounded-sm text-[0.73rem] tracking-[0.16em] uppercase font-semibold transition-all hover:-translate-y-[1px] hover:shadow-[0_6px_20px_rgba(197,49,18,0.25)]"
           >
             Book Now
-          </button>
+          </Link>
           <a
             href="#properties"
             className="border-[1.5px] border-sann-red/30 hover:border-sann-red text-sann-red bg-transparent hover:bg-sann-red/[0.04] px-7 py-3 rounded-sm text-[0.73rem] tracking-[0.16em] uppercase font-semibold transition-all"

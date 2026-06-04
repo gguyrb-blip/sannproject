@@ -1,11 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import type { Property } from "@/lib/site-data";
 import ImageSlider from "./ImageSlider";
-import { useBookingModal } from "./BookingModalProvider";
 
 export default function PropertyCard({ property }: { property: Property }) {
-  const { open } = useBookingModal();
   const isOpen = property.status === "open";
 
   return (
@@ -54,12 +53,12 @@ export default function PropertyCard({ property }: { property: Property }) {
             </span>
           </div>
           {isOpen ? (
-            <button
-              onClick={() => open()}
+            <Link
+              href="/book"
               className="text-[0.65rem] tracking-[0.14em] uppercase text-sann-red font-semibold border-b border-sann-red/30 pb-px"
             >
               Book Now
-            </button>
+            </Link>
           ) : (
             <span className="text-[0.65rem] tracking-[0.14em] uppercase text-sann-text-lt font-semibold opacity-60">
               Coming Soon

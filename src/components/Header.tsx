@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useBookingModal } from "./BookingModalProvider";
 import MobileNav from "./MobileNav";
 import { LOGO } from "@/lib/site-data";
 
@@ -18,7 +18,7 @@ const NAV_LINKS = [
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { open } = useBookingModal();
+  const router = useRouter();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 80);
@@ -61,12 +61,12 @@ export default function Header() {
         </ul>
 
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => open()}
+          <Link
+            href="/book"
             className="bg-sann-red hover:bg-sann-red-dk text-white px-5 py-2 rounded-sm text-[0.72rem] tracking-[0.14em] uppercase font-semibold transition-colors"
           >
             Book Now
-          </button>
+          </Link>
           <button
             onClick={() => setMobileOpen(true)}
             className="lg:hidden flex flex-col gap-[5px] p-1"
@@ -85,7 +85,7 @@ export default function Header() {
         links={NAV_LINKS}
         onBookClick={() => {
           setMobileOpen(false);
-          open();
+          router.push("/book");
         }}
       />
     </>

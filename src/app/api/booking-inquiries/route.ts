@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { sendNotificationEmail, formatFields } from "@/lib/email";
+import {
+  sendNotificationEmail,
+  sendGuestConfirmation,
+  formatFields,
+} from "@/lib/email";
 
 export const runtime = "nodejs";
 
@@ -70,5 +74,63 @@ export async function POST(request: Request) {
     replyTo: body.email?.trim() || undefined,
   });
 
-  return NextResponse.json({ ok: true });
+  // ── Forward to SANN Hostel OS (admin PMS) as a pending booking ──
+  // Creates a real booking in app.sannstay.com/admin/bookings so the inquiry
+  // flows straight into the property-management system. Failures here never
+  // block the inquiry (it's already saved + emailed above).
+  let adminBookingRef: string | null = null;
+  let adminUnavailable = false;
+  if (body.check_in_date && body.check_out_date) {
+    try {
+      const adminApi =
+        process.env.ADMIN_BOOKING_API || "https://app.sannstay.com";
+      const note = [
+        body.preferred_unit ? `ห้องที่สนใจ: ${body.preferred_unit}` : null,
+        body.message?.trim() || null,
+      ]
+        .filter(Boolean)
+        .join(" · ");
+      const res = await fetch(`${adminApi}/api/public/booking`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          check_in_date: body.check_in_date,
+          check_out_date: body.check_out_date,
+          num_guests: body.number_of_guests ?? 1,
+          guest: {
+            full_name: guest_name,
+            phone: body.phone_line?.trim() || undefined,
+            email: body.email?.trim() || undefined,
+          },
+          note: note || undefined,
+        }),
+      });
+      const j = (await res.json().catch(() => ({}))) as {
+        booking_ref?: string;
+      };
+      if (res.ok && j?.booking_ref) adminBookingRef = j.booking_ref;
+      else if (res.status === 409) adminUnavailable = true;
+    } catch (e) {
+      console.error("forward to admin PMS failed", e);
+    }
+  }
+
+  // ── Send the guest a confirmation email (only if they gave an email) ──
+  if (body.email?.trim() && !adminUnavailable) {
+    await sendGuestConfirmation({
+      to: body.email.trim(),
+      guestName: guest_name,
+      checkIn: body.check_in_date,
+      checkOut: body.check_out_date,
+      guests: body.number_of_guests,
+      bookingRef: adminBookingRef,
+      unit: body.preferred_unit?.trim() || undefined,
+    });
+  }
+
+  return NextResponse.json({
+    ok: true,
+    booking_ref: adminBookingRef,
+    unavailable: adminUnavailable,
+  });
 }
