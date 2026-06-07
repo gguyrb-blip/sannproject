@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import {
-  sendNotificationEmail,
-  sendGuestConfirmation,
-  formatFields,
-} from "@/lib/email";
+import { sendNotificationEmail, formatFields } from "@/lib/email";
 
 export const runtime = "nodejs";
 
@@ -115,18 +111,9 @@ export async function POST(request: Request) {
     }
   }
 
-  // ── Send the guest a confirmation email (only if they gave an email) ──
-  if (body.email?.trim() && !adminUnavailable) {
-    await sendGuestConfirmation({
-      to: body.email.trim(),
-      guestName: guest_name,
-      checkIn: body.check_in_date,
-      checkOut: body.check_out_date,
-      guests: body.number_of_guests,
-      bookingRef: adminBookingRef,
-      unit: body.preferred_unit?.trim() || undefined,
-    });
-  }
+  // Note: the guest confirmation email is now sent by the booking engine
+  // (app.sannstay.com /api/public/booking) when the booking is auto-confirmed,
+  // so we no longer send sendGuestConfirmation here to avoid duplicate emails.
 
   return NextResponse.json({
     ok: true,
