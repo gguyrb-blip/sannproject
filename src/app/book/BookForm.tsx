@@ -23,6 +23,7 @@ export default function BookForm() {
   // availability + pricing
   const [blocked, setBlocked] = useState<Set<string>>(new Set());
   const [rates, setRates] = useState<Record<string, number>>({});
+  const [cleaningFee, setCleaningFee] = useState(0);
   const [quote, setQuote] = useState<Quote | null>(null);
   // calendar
   const today = new Date();
@@ -39,7 +40,7 @@ export default function BookForm() {
   useEffect(() => {
     fetch(`${ADMIN_API}/api/public/availability`)
       .then((r) => r.json())
-      .then((d) => { setBlocked(new Set(d.unavailable_dates ?? [])); setRates(d.rates ?? {}); })
+      .then((d) => { setBlocked(new Set(d.unavailable_dates ?? [])); setRates(d.rates ?? {}); setCleaningFee(d.cleaning_fee ?? 0); })
       .catch(() => {});
   }, []);
 
@@ -146,6 +147,13 @@ export default function BookForm() {
           );
         })}
       </div>
+
+      {/* Cleaning fee note */}
+      {cleaningFee > 0 && (
+        <p className="text-center text-[0.7rem] text-sann-text-lt mt-2">
+          * ราคาในปฏิทินยังไม่รวมค่าทำความสะอาด {fmt(cleaningFee)}/ครั้ง · Calendar prices exclude the {fmt(cleaningFee)} cleaning fee
+        </p>
+      )}
 
       {/* Price summary */}
       {quote && (
