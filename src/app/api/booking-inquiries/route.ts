@@ -51,29 +51,12 @@ export async function POST(request: Request) {
     );
   }
 
-  // Fire-and-forget email notification to the hotel inbox.
-  await sendNotificationEmail({
-    subject: `New booking inquiry — ${guest_name}`,
-    text:
-      "A new booking inquiry was submitted on sannstay.com.\n\n" +
-      formatFields({
-        guest_name,
-        phone_line: body.phone_line,
-        email: body.email,
-        preferred_unit: body.preferred_unit,
-        check_in_date: body.check_in_date,
-        check_out_date: body.check_out_date,
-        number_of_guests: body.number_of_guests,
-        message: body.message,
-      }) +
-      "\n\nView all inquiries: https://sannstay.com/admin",
-    replyTo: body.email?.trim() || undefined,
-  });
-
-  // ── Forward to SANN Hostel OS (admin PMS) as a pending booking ──
+  // ── Forward to SANN Hostel OS (admin PMS) as a confirmed booking ──
   // Creates a real booking in app.sannstay.com/admin/bookings so the inquiry
-  // flows straight into the property-management system. Failures here never
-  // block the inquiry (it's already saved + emailed above).
+  // flows straight into the property-management system. On success, the admin
+  // booking engine sends the hotel notification (with booking ref + total), so
+  // we skip the inquiry email below to avoid a duplicate. Failures here never
+  // block the inquiry (it's already saved above).
   let adminBookingRef: string | null = null;
   let adminUnavailable = false;
   if (body.check_in_date && body.check_out_date) {
@@ -109,6 +92,33 @@ export async function POST(request: Request) {
     } catch (e) {
       console.error("forward to admin PMS failed", e);
     }
+  }
+
+  // Notify the hotel inbox ONLY when the admin booking engine did NOT create a
+  // booking (pure inquiry with no dates, dates unavailable, or forward failed).
+  // Successful bookings are already announced by the engine with the real ref.
+  if (!adminBookingRef) {
+    await sendNotificationEmail({
+      subject: adminUnavailable
+        ? `Booking attempt (dates unavailable) — ${guest_name}`
+        : `New booking inquiry — ${guest_name}`,
+      text:
+        (adminUnavailable
+          ? "A guest tried to book on sannstay.com but the dates were unavailable.\n\n"
+          : "A new booking inquiry was submitted on sannstay.com.\n\n") +
+        formatFields({
+          guest_name,
+          phone_line: body.phone_line,
+          email: body.email,
+          preferred_unit: body.preferred_unit,
+          check_in_date: body.check_in_date,
+          check_out_date: body.check_out_date,
+          number_of_guests: body.number_of_guests,
+          message: body.message,
+        }) +
+        "\n\nView all inquiries: https://sannstay.com/admin",
+      replyTo: body.email?.trim() || undefined,
+    });
   }
 
   // Note: the guest confirmation email is now sent by the booking engine
