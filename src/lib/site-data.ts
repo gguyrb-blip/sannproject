@@ -104,8 +104,8 @@ export const ABOUT_IMAGE_SECONDARY = "/images/about-2.jpg";
 export const GALLERY_IMAGES = [
   { label: "Kitchenette", src: "/images/gallery-1.jpg" },
   { label: "Living Room", src: "/images/gallery-2.jpg" },
-  { label: "Bedroom", src: "/images/gallery-3.jpg" },
-  { label: "Workspace", src: "/images/gallery-4.jpg" },
+  { label: "Exterior", src: "/images/gallery-3.jpg" },
+  { label: "Bedroom", src: "/images/gallery-4.jpg" },
 ];
 
 export const TESTIMONIALS = [
