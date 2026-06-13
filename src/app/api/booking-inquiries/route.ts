@@ -31,34 +31,13 @@ export async function POST(request: Request) {
     );
   }
 
-  const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.from("booking_inquiries").insert({
-    check_in_date: body.check_in_date || null,
-    check_out_date: body.check_out_date || null,
-    number_of_guests: body.number_of_guests ?? null,
-    preferred_unit: body.preferred_unit?.trim() || null,
-    guest_name,
-    phone_line: body.phone_line?.trim() || null,
-    email: body.email?.trim() || null,
-    message: body.message?.trim() || null,
-  });
-
-  if (error) {
-    console.error("booking_inquiries insert failed", error);
-    return NextResponse.json(
-      { error: "Could not save your inquiry — please try again." },
-      { status: 500 },
-    );
-  }
-
-  // ── Forward to SANN Hostel OS (admin PMS) as a confirmed booking ──
-  // Creates a real booking in app.sannstay.com/admin/bookings so the inquiry
-  // flows straight into the property-management system. On success, the admin
-  // booking engine sends the hotel notification (with booking ref + total), so
-  // we skip the inquiry email below to avoid a duplicate. Failures here never
-  // block the inquiry (it's already saved above).
+  // ── Create the real booking first (forward to the PMS booking engine) ──
+  // This is the primary action. It creates a confirmed booking in
+  // app.sannstay.com/admin/bookings, and the engine sends the guest
+  // confirmation + hotel notification (with booking ref + total).
   let adminBookingRef: string | null = null;
   let adminUnavailable = false;
+  let adminErrored = false;
   if (body.check_in_date && body.check_out_date) {
     try {
       const adminApi =
@@ -89,13 +68,46 @@ export async function POST(request: Request) {
       };
       if (res.ok && j?.booking_ref) adminBookingRef = j.booking_ref;
       else if (res.status === 409) adminUnavailable = true;
+      else adminErrored = true;
     } catch (e) {
       console.error("forward to admin PMS failed", e);
+      adminErrored = true;
     }
   }
 
+  // ── Best-effort: archive the lead in booking_inquiries ──
+  // Never blocks the booking. If the table doesn't exist (or RLS denies),
+  // we just log it — the real booking above is what matters.
+  const supabase = await createSupabaseServerClient();
+  let inquirySaved = false;
+  try {
+    const { error } = await supabase.from("booking_inquiries").insert({
+      check_in_date: body.check_in_date || null,
+      check_out_date: body.check_out_date || null,
+      number_of_guests: body.number_of_guests ?? null,
+      preferred_unit: body.preferred_unit?.trim() || null,
+      guest_name,
+      phone_line: body.phone_line?.trim() || null,
+      email: body.email?.trim() || null,
+      message: body.message?.trim() || null,
+    });
+    if (error) console.error("booking_inquiries insert failed (non-fatal)", error.message);
+    else inquirySaved = true;
+  } catch (e) {
+    console.error("booking_inquiries insert threw (non-fatal)", e);
+  }
+
+  // If nothing was saved anywhere — the booking engine errored AND we couldn't
+  // archive the lead — surface a real error so the guest knows to retry.
+  if (adminErrored && !adminBookingRef && !adminUnavailable && !inquirySaved) {
+    return NextResponse.json(
+      { error: "Could not complete your booking — please try again or contact us on WhatsApp." },
+      { status: 502 },
+    );
+  }
+
   // Notify the hotel inbox ONLY when the admin booking engine did NOT create a
-  // booking (pure inquiry with no dates, dates unavailable, or forward failed).
+  // booking (dates unavailable, or forward failed but the lead was archived).
   // Successful bookings are already announced by the engine with the real ref.
   if (!adminBookingRef) {
     await sendNotificationEmail({
