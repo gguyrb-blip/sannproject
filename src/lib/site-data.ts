@@ -43,11 +43,11 @@ export const PROPERTIES: Property[] = [
     price: "฿2,500",
     priceUnit: "/ night",
     images: [
-      "/images/hatyai/1.png",
-      "/images/hatyai/2.png",
-      "/images/hatyai/3.png",
-      "/images/hatyai/4.png",
-      "/images/hatyai/5.png",
+      "/images/hatyai/1.jpg",
+      "/images/hatyai/2.jpg",
+      "/images/hatyai/3.jpg",
+      "/images/hatyai/4.jpg",
+      "/images/hatyai/5.jpg",
     ],
     airbnbUrl: "https://www.airbnb.com/rooms/1672362046238838999",
     bookingUrl:
@@ -75,10 +75,10 @@ export const PROPERTIES: Property[] = [
     // photos arrive. Replace with /images/thungsao/1.png, 2.png ... when
     // the new files are uploaded.
     images: [
-      "/images/hatyai/4.png",
-      "/images/hatyai/5.png",
-      "/images/hatyai/1.png",
-      "/images/hatyai/2.png",
+      "/images/hatyai/4.jpg",
+      "/images/hatyai/5.jpg",
+      "/images/hatyai/1.jpg",
+      "/images/hatyai/2.jpg",
     ],
     status: "coming-soon",
   },
@@ -93,19 +93,19 @@ export const LOGO = {
   light: "/images/logo-light.png",
 };
 
-export const HERO_IMAGE = "/images/hero.png";
-export const HERO_IMAGE_MOBILE = "/images/hero.png";
+export const HERO_IMAGE = "/images/hero.jpg";
+export const HERO_IMAGE_MOBILE = "/images/hero.jpg";
 
-// Reuse the best two interior shots for the About section until the
-// brand sends dedicated About photos.
-export const ABOUT_IMAGE_MAIN = "/images/hatyai/2.png";
-export const ABOUT_IMAGE_SECONDARY = "/images/hatyai/3.png";
+// Dedicated About-section photos (drop your own — independent of the
+// property gallery above).
+export const ABOUT_IMAGE_MAIN = "/images/about-1.jpg";
+export const ABOUT_IMAGE_SECONDARY = "/images/about-2.jpg";
 
 export const GALLERY_IMAGES = [
   { label: "Kitchenette", src: "/images/gallery-1.jpg" },
-  { label: "Living Room", src: "/images/gallery-2.png" },
-  { label: "Exterior", src: "/images/gallery-3.jpg" },
-  { label: "Bedroom", src: "/images/gallery-4.jpg" },
+  { label: "Living Room", src: "/images/gallery-2.jpg" },
+  { label: "Bedroom", src: "/images/gallery-3.jpg" },
+  { label: "Workspace", src: "/images/gallery-4.jpg" },
 ];
 
 export const TESTIMONIALS = [

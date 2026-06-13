@@ -94,17 +94,25 @@ export default function BookForm() {
   }, [calY, calM]);
 
   const inRange = (d: string) => !!(checkIn && checkOut && d >= checkIn && d < checkOut);
+  // Every NIGHT in [from, to) free? The check-out day itself is not a night.
+  function nightsFree(from: string, to: string) {
+    let t = new Date(from + "T00:00:00Z").getTime();
+    const end = new Date(to + "T00:00:00Z").getTime();
+    while (t < end) { if (blocked.has(new Date(t).toISOString().slice(0, 10))) return false; t += 86_400_000; }
+    return true;
+  }
+  // A booked day can still be a valid CHECK-OUT (turnover day) — you leave that
+  // morning while the next guest arrives. Only the nights you sleep must be free.
+  const isCheckoutCandidate = (d: string) => !!checkIn && !checkOut && d > checkIn && nightsFree(checkIn, d);
   function clickDay(d: string) {
-    if (blocked.has(d) || d < todayISO()) return;
-    if (!checkIn || (checkIn && checkOut)) { setCheckIn(d); setCheckOut(null); }
-    else if (d <= checkIn) { setCheckIn(d); setCheckOut(null); }
-    else {
-      let t = new Date(checkIn + "T00:00:00Z").getTime();
-      const end = new Date(d + "T00:00:00Z").getTime();
-      let ok = true;
-      while (t < end) { if (blocked.has(new Date(t).toISOString().slice(0, 10))) { ok = false; break; } t += 86_400_000; }
-      if (ok) setCheckOut(d); else { setCheckIn(d); setCheckOut(null); }
-    }
+    if (d < todayISO()) return;
+    const isBlk = blocked.has(d);
+    // Start (or restart) a selection — a check-in night must be free
+    if (!checkIn || checkOut) { if (isBlk) return; setCheckIn(d); setCheckOut(null); return; }
+    if (d <= checkIn) { if (isBlk) return; setCheckIn(d); setCheckOut(null); return; }
+    // d > checkIn → candidate check-out (day itself may be booked; nights must be free)
+    if (nightsFree(checkIn, d)) setCheckOut(d);
+    else if (!isBlk) { setCheckIn(d); setCheckOut(null); }
   }
   function shiftMonth(n: number) {
     let m = calM + n, y = calY;
@@ -172,18 +180,19 @@ export default function BookForm() {
           if (!d) return <div key={i} />;
           const isPast = d < todayISO();
           const isBlocked = blocked.has(d);
+          const canCheckout = isCheckoutCandidate(d);   // booked day usable as check-out
           const isCI = d === checkIn, isCO = checkOut && d === checkOut;
           const ranged = inRange(d);
           const price = rates[d];
           const dom = Number(d.slice(8, 10));
           return (
-            <button key={d} type="button" disabled={isPast || isBlocked} onClick={() => clickDay(d)}
+            <button key={d} type="button" disabled={isPast || (isBlocked && !canCheckout)} onClick={() => clickDay(d)}
               className={`min-h-[44px] rounded flex flex-col items-center justify-center gap-0.5 border ${
                 isCI || isCO ? "border-2 border-sann-red" : "border-sann-red/10"
-              } ${isPast ? "bg-sann-cream/40 opacity-40" : isBlocked ? "bg-red-50" : (isCI || ranged) ? "bg-sann-red/[0.08]" : "bg-white"}`}>
+              } ${isPast ? "bg-sann-cream/40 opacity-40" : (isBlocked && !canCheckout) ? "bg-red-50" : (isCI || isCO || ranged) ? "bg-sann-red/[0.08]" : "bg-white"}`}>
               <span className={`text-xs ${isCI || isCO ? "font-extrabold" : "font-medium"} text-sann-text`}>{dom}</span>
-              {isBlocked ? <span className="text-[0.5rem] font-bold text-red-600">{tr.booked}</span>
-                : price != null ? <span className="text-[0.55rem] font-mono text-sann-red">{(price / 1000).toFixed(price % 1000 === 0 ? 0 : 1)}k</span>
+              {(isBlocked && !canCheckout) ? <span className="text-[0.5rem] font-bold text-red-600">{tr.booked}</span>
+                : (!isBlocked && price != null) ? <span className="text-[0.55rem] font-mono text-sann-red">{(price / 1000).toFixed(price % 1000 === 0 ? 0 : 1)}k</span>
                 : null}
             </button>
           );
