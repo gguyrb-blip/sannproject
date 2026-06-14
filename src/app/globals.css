@@ -3,14 +3,19 @@
 @tailwind utilities;
 
 :root {
-  --sann-red: #c53112;
-  --sann-red-dk: #9e2609;
-  --sann-beige: #e6d8b8;
-  --sann-cream: #faf6ee;
-  --sann-off: #fdf9f4;
-  --sann-text: #2a1f18;
-  --sann-text-md: #6b4f3a;
-  --sann-text-lt: #9e826a;
+  /* SANN OS palette — shared across kiosk / admin / website */
+  --sann-red: #b23d1d;
+  --sann-red-dk: #8e2f12;
+  --sann-terracotta-soft: #f8d9c8;
+  --sann-beige: #ecdfcf;
+  --sann-bg2: #faeee1;
+  --sann-cream: #f8f6f2;
+  --sann-off: #f8f6f2;
+  --sann-line: #ecdfcf;
+  --sann-success: #5c7a4f;
+  --sann-text: #4a342e;
+  --sann-text-md: #4a342e;
+  --sann-text-lt: #8b8178;
 }
 
 html {
@@ -18,7 +23,7 @@ html {
 }
 
 body {
-  background: var(--sann-off);
+  background: var(--sann-cream);
   color: var(--sann-text);
   overflow-x: hidden;
 }

@@ -5,6 +5,7 @@ import AboutSection from "@/components/AboutSection";
 import GalleryStrip from "@/components/GalleryStrip";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import FAQSection from "@/components/FAQSection";
+import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
 import StickyBookingBar from "@/components/StickyBookingBar";
 import LineFloat from "@/components/LineFloat";
@@ -21,6 +22,7 @@ export default function HomePage() {
         <GalleryStrip />
         <TestimonialsSection />
         <FAQSection />
+        <CTASection />
       </main>
       <Footer />
       <LineFloat />

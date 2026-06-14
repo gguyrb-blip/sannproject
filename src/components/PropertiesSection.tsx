@@ -1,28 +1,109 @@
-import { PROPERTIES } from "@/lib/site-data";
-import PropertyCard from "./PropertyCard";
+import Link from "next/link";
+import { PROPERTIES, CONTACT, type Property } from "@/lib/site-data";
+import { ArrowR } from "./icons";
 
 export default function PropertiesSection() {
   return (
-    <section
-      id="properties"
-      className="bg-sann-cream px-6 lg:px-20 py-20 lg:py-24"
-    >
-      <header className="rv mb-12">
-        <p className="text-[0.63rem] tracking-[0.3em] uppercase text-sann-red font-semibold mb-2">
-          Our Properties
-        </p>
-        <h2 className="font-display text-3xl lg:text-4xl text-sann-text font-normal leading-[1.15]">
-          Two Unique Stays
-          <br />
-          in <em className="italic text-sann-red">Hat Yai</em>
-        </h2>
-        <div className="w-9 h-0.5 bg-sann-red mt-5 opacity-40" />
-      </header>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {PROPERTIES.map((p) => (
-          <PropertyCard key={p.id} property={p} />
-        ))}
+    <section id="properties" className="bg-sann-bg2 px-5 sm:px-8 lg:px-14 py-16 lg:py-24">
+      <div className="max-w-7xl mx-auto">
+        <header className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5 mb-10">
+          <div>
+            <div className="font-mono text-xs text-sann-text-lt tracking-[0.18em] uppercase mb-2.5">Our properties</div>
+            <h2 className="font-display font-normal text-4xl lg:text-[3.4rem] leading-[1.05] text-sann-text m-0">
+              Two unique stays in <i className="text-sann-red">Hat Yai</i>
+            </h2>
+          </div>
+          <p className="max-w-sm text-sann-text-lt text-sm leading-relaxed">
+            A 4-bedroom home for groups, and a hostel for solo travellers — both
+            within 10 minutes of Hat Yai&apos;s best food, markets, and transport.
+          </p>
+        </header>
+
+        <div className="grid lg:grid-cols-2 gap-6">
+          {PROPERTIES.map((p) => (
+            <Card key={p.id} p={p} />
+          ))}
+        </div>
       </div>
     </section>
+  );
+}
+
+function Card({ p }: { p: Property }) {
+  const soon = p.status === "coming-soon";
+  return (
+    <div className="bg-sann-card rounded-sann-xl overflow-hidden flex flex-col shadow-sann-md">
+      <div className="relative aspect-[16/10]">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={p.images[0]}
+          alt={p.name}
+          className={`w-full h-full object-cover ${soon ? "grayscale-[.4] brightness-90" : ""}`}
+        />
+        <div
+          className={`absolute top-3.5 left-3.5 px-3 py-1.5 text-[0.68rem] font-mono tracking-[0.12em] uppercase rounded-md text-white ${
+            soon ? "bg-[rgba(20,12,8,.7)]" : "bg-sann-red"
+          }`}
+        >
+          {soon ? "Opening soon" : "Now open"}
+        </div>
+      </div>
+
+      <div className="p-6 flex flex-col gap-3.5 flex-1">
+        <div>
+          <div className="font-display text-3xl leading-tight text-sann-text">{p.name}</div>
+          <div className="text-[0.82rem] text-sann-text-lt mt-1.5">{p.location}</div>
+        </div>
+
+        <p className="text-sm text-sann-text leading-relaxed m-0">{p.description}</p>
+
+        <div className="grid grid-cols-2 gap-2 mt-1">
+          {p.amenities.slice(0, 4).map((a) => (
+            <div key={a} className="flex items-center gap-2 text-[0.82rem] text-sann-text">
+              {a}
+            </div>
+          ))}
+        </div>
+
+        <div className="h-px bg-sann-line my-2" />
+
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="font-mono text-2xl font-medium text-sann-text">{p.price}</div>
+            <div className="text-[0.68rem] text-sann-text-lt">{p.priceUnit}</div>
+          </div>
+          {soon ? (
+            <button disabled className="bg-white border border-sann-line text-sann-text/70 text-sm px-4 py-2.5 rounded-xl opacity-70 cursor-default">
+              Join waitlist
+            </button>
+          ) : (
+            <Link href="/book" className="inline-flex items-center gap-1.5 bg-sann-text hover:bg-sann-red text-white text-sm font-medium px-4 py-2.5 rounded-xl transition-colors">
+              Book now <ArrowR size={14} />
+            </Link>
+          )}
+        </div>
+
+        {!soon && (
+          <div className="flex flex-wrap gap-2 mt-1">
+            {p.airbnbUrl && <Chip href={p.airbnbUrl}>🏠 Airbnb</Chip>}
+            {p.bookingUrl && <Chip href={p.bookingUrl}>📘 Booking.com</Chip>}
+            <Chip href={CONTACT.lineUrl}>💬 LINE</Chip>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Chip({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-1 text-[0.7rem] text-sann-text border border-sann-line bg-white rounded-full px-2.5 py-1 hover:border-sann-red transition-colors"
+    >
+      {children}
+    </a>
   );
 }

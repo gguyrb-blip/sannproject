@@ -2,156 +2,77 @@ import Link from "next/link";
 import Image from "next/image";
 import { CONTACT, LOGO } from "@/lib/site-data";
 
+const SOCIAL = [
+  { label: "Instagram", letter: "I", href: "https://www.instagram.com/sannstay.hatyai/" },
+  { label: "Facebook", letter: "F", href: "https://www.facebook.com/people/sann-stay/61565234153610/" },
+  { label: "TikTok", letter: "T", href: "https://www.tiktok.com/@sannastayhatyai" },
+  { label: "Airbnb", letter: "A", href: "https://www.airbnb.com/rooms/1672362046238838999" },
+  { label: "LINE", letter: "L", href: CONTACT.lineUrl },
+];
+
 export default function Footer() {
   return (
-    <footer className="bg-sann-text text-sann-beige-2 px-6 lg:px-20 pt-16 pb-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-8 mb-12">
-        <div>
-          <Image
-            src={LOGO.light}
-            alt="Sann Stay"
-            width={600}
-            height={124}
-            className="h-6 w-auto mb-4"
-          />
-          <p className="text-[0.82rem] text-sann-beige-2/50 leading-[1.75] max-w-[260px]">
-            Boutique accommodation in the best locations of Hat Yai, Thailand.
-          </p>
-          <div className="flex gap-4 mt-5">
-            <a
-              href="https://www.instagram.com/sannstay.hatyai/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[0.65rem] tracking-[0.15em] uppercase text-sann-beige-2/35 hover:text-sann-beige transition-colors"
-            >
-              Instagram
-            </a>
-            <a
-              href="https://www.facebook.com/people/sann-stay/61565234153610/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[0.65rem] tracking-[0.15em] uppercase text-sann-beige-2/35 hover:text-sann-beige transition-colors"
-            >
-              Facebook
-            </a>
-            <a
-              href="https://www.tiktok.com/@sannastayhatyai"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[0.65rem] tracking-[0.15em] uppercase text-sann-beige-2/35 hover:text-sann-beige transition-colors"
-            >
-              TikTok
-            </a>
-            <a
-              href="https://www.airbnb.com/rooms/1672362046238838999"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[0.65rem] tracking-[0.15em] uppercase text-sann-beige-2/35 hover:text-sann-beige transition-colors"
-            >
-              Airbnb
-            </a>
-            <a
-              href={CONTACT.lineUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[0.65rem] tracking-[0.15em] uppercase text-sann-beige-2/35 hover:text-sann-beige transition-colors"
-            >
-              LINE
-            </a>
+    <footer className="bg-sann-bg2 border-t border-sann-line px-5 sm:px-8 lg:px-14 pt-16 pb-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr] gap-8 lg:gap-10 mb-12">
+          <div className="col-span-2 lg:col-span-1">
+            <Image src={LOGO.primary} alt="Sann Stay" width={400} height={90} className="h-6 w-auto" />
+            <p className="text-sm text-sann-text-lt leading-relaxed mt-4 max-w-[280px]">
+              Boutique accommodation in the best locations of Hat Yai, Thailand.
+            </p>
+            <div className="flex gap-2.5 mt-5">
+              {SOCIAL.map((s) => (
+                <a
+                  key={s.label}
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={s.label}
+                  title={s.label}
+                  className="w-9 h-9 rounded-[10px] border border-sann-line bg-white flex items-center justify-center text-xs text-sann-text hover:border-sann-red hover:text-sann-red transition-colors"
+                >
+                  {s.letter}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          <FooterCol title="Properties">
+            <a href="/#properties">Sann Stay Hatyai</a>
+            <a href="/#properties">Sann Thungsao Hostel</a>
+          </FooterCol>
+          <FooterCol title="Guests">
+            <Link href="/book">Book a Stay</Link>
+            <Link href="/checkin">Online Check-in</Link>
+            <Link href="/location">Getting Here</Link>
+            <a href="/#faq">FAQ</a>
+          </FooterCol>
+          <FooterCol title="Contact" mono>
+            <a href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a>
+            <a href={CONTACT.lineUrl} target="_blank" rel="noopener noreferrer">LINE {CONTACT.lineHandle}</a>
+          </FooterCol>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-6 border-t border-sann-line text-xs text-sann-text-lt">
+          <div>© {new Date().getFullYear()} Sann Stay · Made with ♥ in Hat Yai</div>
+          <div className="flex gap-5">
+            <span>Privacy</span>
+            <span>Terms</span>
+            <span>TM.30 Notice</span>
           </div>
         </div>
-        <div>
-          <h4 className="text-[0.62rem] tracking-[0.24em] uppercase text-sann-red-lt font-semibold mb-4 opacity-75">
-            Properties
-          </h4>
-          <ul className="flex flex-col gap-2 list-none text-[0.82rem]">
-            <li>
-              <Link
-                href="/#properties"
-                className="text-sann-beige-2/45 hover:text-sann-beige transition-colors"
-              >
-                Sann Stay Hatyai
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/#properties"
-                className="text-sann-beige-2/45 hover:text-sann-beige transition-colors"
-              >
-                Sann Thung Sao
-              </Link>
-            </li>
-          </ul>
-        </div>
-        <div>
-          <h4 className="text-[0.62rem] tracking-[0.24em] uppercase text-sann-red-lt font-semibold mb-4 opacity-75">
-            Guests
-          </h4>
-          <ul className="flex flex-col gap-2 list-none text-[0.82rem]">
-            <li>
-              <Link
-                href="/book"
-                className="text-sann-beige-2/45 hover:text-sann-beige transition-colors"
-              >
-                Book a Stay
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/checkin"
-                className="text-sann-beige-2/45 hover:text-sann-beige transition-colors"
-              >
-                Online Check-in
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/location"
-                className="text-sann-beige-2/45 hover:text-sann-beige transition-colors"
-              >
-                Getting Here
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/#faq"
-                className="text-sann-beige-2/45 hover:text-sann-beige transition-colors"
-              >
-                FAQ
-              </Link>
-            </li>
-          </ul>
-        </div>
-        <div>
-          <h4 className="text-[0.62rem] tracking-[0.24em] uppercase text-sann-red-lt font-semibold mb-4 opacity-75">
-            Contact
-          </h4>
-          <ul className="flex flex-col gap-2 list-none text-[0.82rem]">
-            <li>
-              <a
-                href={`mailto:${CONTACT.email}`}
-                className="text-sann-beige-2/45 hover:text-sann-beige transition-colors"
-              >
-                {CONTACT.email}
-              </a>
-            </li>
-            <li>
-              <a
-                href={CONTACT.lineUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sann-beige-2/45 hover:text-sann-beige transition-colors"
-              >
-                LINE: {CONTACT.lineHandle}
-              </a>
-            </li>
-          </ul>
-        </div>
-      </div>
-      <div className="border-t border-sann-beige-2/10 pt-6 flex flex-col sm:flex-row gap-2 sm:justify-between text-[0.7rem] text-sann-beige-2/25">
-        <p>© {new Date().getFullYear()} Sann Stay. All rights reserved.</p>
-        <p>Made with ♥ in Hat Yai</p>
       </div>
     </footer>
+  );
+}
+
+function FooterCol({ title, children, mono }: { title: string; children: React.ReactNode; mono?: boolean }) {
+  return (
+    <div>
+      <div className="font-mono text-[0.62rem] text-sann-text-lt tracking-[0.16em] uppercase mb-3.5">{title}</div>
+      <div className={`flex flex-col gap-2.5 text-[0.82rem] text-sann-text [&_a:hover]:text-sann-red [&_a]:transition-colors ${mono ? "font-mono" : ""}`}>
+        {children}
+      </div>
+    </div>
   );
 }

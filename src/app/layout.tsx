@@ -1,23 +1,23 @@
 import type { Metadata } from "next";
-import { Playfair_Display, DM_Sans, Cormorant_Garamond } from "next/font/google";
+import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { BookingModalProvider } from "@/components/BookingModalProvider";
 import "./globals.css";
 
-const playfair = Playfair_Display({
+const geist = Geist({
   subsets: ["latin"],
-  variable: "--font-playfair",
+  variable: "--font-geist",
   display: "swap",
 });
-const dmSans = DM_Sans({
+const geistMono = Geist_Mono({
   subsets: ["latin"],
-  variable: "--font-dm-sans",
+  variable: "--font-geist-mono",
   display: "swap",
 });
-const cormorant = Cormorant_Garamond({
+const instrument = Instrument_Serif({
   subsets: ["latin"],
-  weight: ["300", "400"],
+  weight: "400",
   style: ["normal", "italic"],
-  variable: "--font-cormorant",
+  variable: "--font-instrument",
   display: "swap",
 });
 
@@ -50,7 +50,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${playfair.variable} ${dmSans.variable} ${cormorant.variable}`}
+      className={`${geist.variable} ${geistMono.variable} ${instrument.variable}`}
     >
       <body className="font-sans antialiased">
         <BookingModalProvider>{children}</BookingModalProvider>
