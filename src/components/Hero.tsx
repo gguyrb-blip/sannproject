@@ -72,9 +72,9 @@ export default function Hero() {
         <div className="absolute bottom-12 right-[-8px] sm:right-[-24px] bg-white rounded-sann-md shadow-sann-lg p-3.5 max-w-[210px]">
           <div className="font-mono text-[0.62rem] text-sann-text-lt tracking-[0.12em]">FROM</div>
           <div className="font-mono text-2xl font-medium mt-0.5 text-sann-text">
-            ฿350<span className="text-[0.8rem] text-sann-text-lt font-normal"> / night</span>
+            ฿3,500<span className="text-[0.8rem] text-sann-text-lt font-normal"> / night</span>
           </div>
-          <div className="text-[0.7rem] text-sann-text-lt mt-0.5">per bed · Thungsao Hostel</div>
+          <div className="text-[0.7rem] text-sann-text-lt mt-0.5">per house · Sann Stay Hatyai</div>
         </div>
       </div>
     </section>
