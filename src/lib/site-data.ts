@@ -40,7 +40,7 @@ export const PROPERTIES: Property[] = [
       "🧺 Fresh linens & towels",
       "🍪 Welcome snacks",
     ],
-    price: "฿2,500",
+    price: "฿3,500",
     priceUnit: "/ night",
     images: [
       "/images/hatyai/1.jpg",
