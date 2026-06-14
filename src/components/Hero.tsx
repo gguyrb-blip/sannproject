@@ -42,8 +42,6 @@ export default function Hero() {
         </div>
 
         <div className="flex items-center gap-5 mt-3 pt-5 border-t border-sann-line">
-          <Stat n="320+" l="happy guests" />
-          <Div />
           <Stat n="4.9" l="avg rating" star />
           <Div />
           <Stat n="2" l="properties" />
