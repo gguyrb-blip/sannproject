@@ -35,7 +35,7 @@ export default function StickyBookingBar() {
             From
           </span>
           <div className="font-display text-xl text-sann-red font-semibold">
-            ฿2,500{" "}
+            ฿3,500{" "}
             <span className="text-[0.7rem] text-sann-text-lt font-sans font-normal">
               / night
             </span>
