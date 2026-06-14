@@ -56,7 +56,7 @@ export default function Hero() {
         </div>
         <div className="absolute bottom-0 left-0 w-[52%] h-[48%] rounded-sann-xl overflow-hidden shadow-sann-lg border-8 border-sann-cream">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={HERO_IMAGE} alt="" className="w-full h-full object-cover brightness-90 saturate-[.85]" />
+          <img src="/images/exterior-2.jpg" alt="Sann Stay exterior" className="w-full h-full object-cover" />
         </div>
 
         <div className="absolute top-7 left-[-8px] sm:left-[-20px] bg-white rounded-sann-md shadow-sann-lg p-3.5 flex items-center gap-3 max-w-[250px]">

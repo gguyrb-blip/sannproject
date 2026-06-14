@@ -71,15 +71,7 @@ export const PROPERTIES: Property[] = [
     ],
     price: "฿350",
     priceUnit: "/ bed / night",
-    // Placeholder: showing Sann Hatyai photos until real Thung Sao
-    // photos arrive. Replace with /images/thungsao/1.png, 2.png ... when
-    // the new files are uploaded.
-    images: [
-      "/images/hatyai/4.jpg",
-      "/images/hatyai/5.jpg",
-      "/images/hatyai/1.jpg",
-      "/images/hatyai/2.jpg",
-    ],
+    images: ["/images/thungsao-3.jpg"],
     status: "coming-soon",
   },
 ];
@@ -108,24 +100,31 @@ export const GALLERY_IMAGES = [
   { label: "Bedroom", src: "/images/gallery-4.jpg" },
 ];
 
-export const TESTIMONIALS = [
+// Real guest reviews from Sann Stay Hatyai.
+export type Testimonial = {
+  quote: string;
+  author: string;
+  location: string;
+  rating: number;
+  via: string;
+};
+
+export const TESTIMONIALS: Testimonial[] = [
   {
     quote:
-      "Super clean, beautifully decorated. Felt like a real home. The host was very attentive and responsive. Highly recommended!",
-    author: "Natthawut K.",
-    property: "Sann Stay Hatyai",
+      "The property is very convenient for us — massage, shopping and food are all surrounding the property. The property is nice and clean to stay. Highly recommend, nice place!",
+    author: "Yoke Lin",
+    location: "Perak, Malaysia",
+    rating: 5,
+    via: "Airbnb",
   },
   {
     quote:
-      "Bigger than expected! The bed was so comfy, WiFi was fast. Perfect for remote working. Will definitely come back.",
-    author: "Ploy S.",
-    property: "Sann Stay Hatyai",
-  },
-  {
-    quote:
-      "Great location, just steps from Lee Garden. Smart lock check-in was super convenient. The place looked exactly like the photos!",
-    author: "Krit M.",
-    property: "Sann Stay Hatyai",
+      "Robin is a great host — friendly, responsive, and always willing to help. The location is excellent, just a short walk from Lee Garden Plaza, with many massage shops nearby. The house is spacious and well-equipped, with one bedroom on the ground floor — ideal for elderly guests. Our family of eight stayed comfortably, and the air conditioning in every room was very cold and refreshing. With four bedrooms, there's plenty of room for groups of 8–9. Highly recommend to families and friends visiting Hat Yai. 😊",
+    author: "Shermin",
+    location: "Selangor, Malaysia",
+    rating: 4,
+    via: "Airbnb",
   },
 ];
 
