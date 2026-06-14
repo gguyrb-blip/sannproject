@@ -72,7 +72,7 @@ export default function LinksPage() {
 
         {/* Photo */}
         <div className="mt-5 h-36 rounded-2xl overflow-hidden bg-[#efe7d6]">
-          <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: "url('/images/gallery-3.jpg')" }} />
+          <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: "url('/images/hero.jpg')" }} />
         </div>
 
         {/* Book now (primary) */}

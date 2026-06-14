@@ -19,16 +19,28 @@ export default function Footer() {
           </p>
           <div className="flex gap-4 mt-5">
             <a
-              href="#"
+              href="https://www.instagram.com/sannstay.hatyai/"
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-[0.65rem] tracking-[0.15em] uppercase text-sann-beige-2/35 hover:text-sann-beige transition-colors"
             >
               Instagram
             </a>
             <a
-              href="#"
+              href="https://www.facebook.com/people/sann-stay/61565234153610/"
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-[0.65rem] tracking-[0.15em] uppercase text-sann-beige-2/35 hover:text-sann-beige transition-colors"
             >
               Facebook
+            </a>
+            <a
+              href="https://www.tiktok.com/@sannastayhatyai"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[0.65rem] tracking-[0.15em] uppercase text-sann-beige-2/35 hover:text-sann-beige transition-colors"
+            >
+              TikTok
             </a>
             <a
               href="https://www.airbnb.com/rooms/1672362046238838999"
