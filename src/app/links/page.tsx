@@ -57,9 +57,9 @@ export default function LinksPage() {
     <main className="min-h-screen w-full flex flex-col items-center justify-center px-5 py-12 bg-gradient-to-b from-[#faf6ee] to-[#f0e6d4]">
       <div className="relative w-full max-w-[420px] bg-white rounded-[28px] border border-sann-red/10 px-6 pb-8 pt-16 shadow-[0_22px_60px_rgba(42,31,24,0.14)]">
         {/* Logo badge */}
-        <div className="absolute -top-12 left-1/2 -translate-x-1/2">
+        <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 rounded-full bg-sann-red ring-4 ring-white shadow-lg flex items-center justify-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/sann-badge.png" alt="SANN Stay" className="w-24 h-24 rounded-full object-cover ring-4 ring-white shadow-lg" />
+          <img src="/images/logo-light.png" alt="SANN Stay" className="w-16" />
         </div>
 
         {/* Title */}
