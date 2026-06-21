@@ -126,6 +126,14 @@ export const TESTIMONIALS: Testimonial[] = [
     rating: 4,
     via: "Airbnb",
   },
+  {
+    quote:
+      "Highly recommended! A very pleasant stay. Before check-in, the owner sent clear instructions and replied to messages very quickly — everything was smooth and hassle-free. The property is a 3-storey house with a modern design; the rooms are really huge and spacious, beds very comfortable, and everything feels new and well-kept. Location is perfect too — only a 5-minute walk to Lee Garden, yet the neighbourhood stays quiet and peaceful at night. Highly suitable for families or groups, great value for money. We'll definitely come back when we return to Hat Yai!",
+    author: "Lai",
+    location: "Singapore",
+    rating: 5,
+    via: "Airbnb",
+  },
 ];
 
 // Ordered by importance for a first-time guest: how to book → check in
