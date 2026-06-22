@@ -134,6 +134,14 @@ export const TESTIMONIALS: Testimonial[] = [
     rating: 5,
     via: "Airbnb",
   },
+  {
+    quote:
+      "Great place to stay with a family and we can enjoy it together as there is a living hall and it's very spacious and clean. Near to Lee Garden. And also not forgetting to rate the owner 10/10 — the service provided was very friendly.",
+    author: "Ahh",
+    location: "Teluk Intan, Malaysia",
+    rating: 5,
+    via: "Airbnb",
+  },
 ];
 
 // Ordered by importance for a first-time guest: how to book → check in
