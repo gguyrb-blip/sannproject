@@ -7,6 +7,7 @@ import { LOGO } from "@/lib/site-data";
 const NAV = [
   { label: "Properties", href: "/#properties" },
   { label: "About", href: "/#about" },
+  { label: "Gallery", href: "/gallery" },
   { label: "Check-in", href: "/checkin" },
   { label: "Location", href: "/location" },
   { label: "FAQ", href: "/#faq" },
