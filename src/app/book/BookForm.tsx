@@ -20,6 +20,8 @@ const T: Record<Lang, Record<string, string>> = {
     sentEmail: "เราได้ส่งรายละเอียดทางอีเมลแล้ว ขอบคุณค่ะ 🙏", instant: "ยืนยันทันที · ส่งรายละเอียดทางอีเมล",
     feeNote: "ราคาในปฏิทินยังไม่รวมค่าทำความสะอาด", perStay: "/ครั้ง",
     errDates: "กรุณาเลือกวันบนปฏิทิน", errName: "กรุณากรอกชื่อ", errTaken: "ช่วงวันที่เพิ่งถูกจอง กรุณาเลือกวันใหม่",
+    review: "ตรวจสอบรายละเอียดการจอง", checkInL: "เช็กอิน", checkOutL: "เช็กเอาต์",
+    confirmBooking: "ยืนยันการจอง →", edit: "← แก้ไข", noEmail: "—",
   },
   en: {
     pickDates: "Select your dates", guests: "Number of guests", property: "Property",
@@ -29,7 +31,13 @@ const T: Record<Lang, Record<string, string>> = {
     sentEmail: "We've sent the details to your email. Thank you! 🙏", instant: "Instant confirmation · details by email",
     feeNote: "Calendar prices exclude the cleaning fee of", perStay: "/stay",
     errDates: "Please pick dates on the calendar", errName: "Please enter your name", errTaken: "Those dates were just taken — pick new dates",
+    review: "Review your booking", checkInL: "Check-in", checkOutL: "Check-out",
+    confirmBooking: "Confirm booking →", edit: "← Edit", noEmail: "—",
   },
+};
+const fmtDate = (iso: string, l: Lang) => {
+  const d = new Date(iso + "T00:00:00Z");
+  return `${d.getUTCDate()} ${MONTHS[l][d.getUTCMonth()]} ${d.getUTCFullYear()}`;
 };
 const DOW: Record<Lang, string[]> = {
   th: ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"],
@@ -49,6 +57,7 @@ export default function BookForm() {
   const [lang, setLang] = useState<Lang>("th");
   const tr = T[lang];
   const [submitting, setSubmitting] = useState(false);
+  const [review, setReview] = useState(false);
   const [done, setDone] = useState<{ ref: string | null; total: number; nights: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [blocked, setBlocked] = useState<Set<string>>(new Set());
@@ -131,12 +140,18 @@ export default function BookForm() {
     );
   }
 
-  const onSubmit = async (e: React.FormEvent) => {
+  // Step 1 — validate then open the review summary (no submit yet)
+  const openReview = (e: React.FormEvent) => {
     e.preventDefault(); setError(null);
     if (!checkIn || !checkOut) return setError(tr.errDates);
     if (!form.guest_name.trim()) return setError(tr.errName);
     if (quote && !quote.available) return setError(quote.reason || tr.errTaken);
-    setSubmitting(true);
+    setReview(true);
+  };
+
+  // Step 2 — confirmed in the review modal → actually create the booking
+  const doSubmit = async () => {
+    setError(null); setSubmitting(true);
     try {
       const res = await fetch("/api/booking-inquiries", {
         method: "POST", headers: { "Content-Type": "application/json" },
@@ -145,6 +160,7 @@ export default function BookForm() {
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j.error || "Submission failed");
       if (j.unavailable) throw new Error(tr.errTaken);
+      setReview(false);
       setDone({ ref: j.booking_ref ?? null, total: quote?.total ?? 0, nights: quote?.nights ?? 0 });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Submission failed");
@@ -154,7 +170,7 @@ export default function BookForm() {
   const blockedSubmit = !!(quote && !quote.available) || !checkIn || !checkOut;
 
   return (
-    <form onSubmit={onSubmit} className="max-w-2xl mx-auto bg-white border border-sann-red/10 rounded p-6 lg:p-8 shadow-[0_10px_36px_rgba(42,31,24,0.06)]">
+    <form onSubmit={openReview} className="max-w-2xl mx-auto bg-white border border-sann-red/10 rounded p-6 lg:p-8 shadow-[0_10px_36px_rgba(42,31,24,0.06)]">
       {/* Header + language toggle */}
       <div className="flex items-center justify-between mb-3">
         <p className="text-[0.7rem] tracking-[0.16em] uppercase text-sann-red font-semibold">{tr.pickDates}</p>
@@ -246,7 +262,50 @@ export default function BookForm() {
         {submitting ? tr.booking : tr.book}
       </button>
       <p className="text-center text-[0.7rem] text-sann-text-lt mt-2">{tr.instant}</p>
+
+      {/* Review summary before final confirm */}
+      {review && (
+        <div className="fixed inset-0 z-[60] bg-black/45 flex items-center justify-center p-4" onClick={() => !submitting && setReview(false)}>
+          <div className="bg-white rounded-lg w-full max-w-md p-6 shadow-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-display text-xl text-sann-text">{tr.review}</h3>
+            <div className="w-8 h-0.5 bg-sann-red/40 mt-2 mb-4" />
+            <div className="divide-y divide-sann-line/60">
+              <SummaryRow label={tr.property} value={form.preferred_unit} />
+              <SummaryRow label={tr.checkInL} value={checkIn ? fmtDate(checkIn, lang) : "—"} />
+              <SummaryRow label={tr.checkOutL} value={checkOut ? fmtDate(checkOut, lang) : "—"} />
+              <SummaryRow label={tr.guests} value={String(form.number_of_guests)} />
+              <SummaryRow label={tr.guestName} value={form.guest_name} />
+              <SummaryRow label={tr.phone} value={form.phone_line || "—"} />
+              <SummaryRow label={tr.email} value={form.email || tr.noEmail} />
+              {form.message && <SummaryRow label={tr.message} value={form.message} />}
+            </div>
+            {quote && (
+              <div className="mt-4 bg-sann-cream/50 rounded-sm p-3 text-sm">
+                <div className="flex justify-between"><span>{quote.nights} {tr.nights}</span><span>{fmt(quote.rooms_total)}</span></div>
+                {quote.cleaning_fee > 0 && <div className="flex justify-between mt-1"><span>{tr.cleaning}</span><span>{fmt(quote.cleaning_fee)}</span></div>}
+                <div className="flex justify-between font-bold text-sann-red border-t border-sann-red/15 mt-2 pt-2"><span>{tr.total}</span><span>{fmt(quote.total)}</span></div>
+              </div>
+            )}
+            {error && <p className="text-sann-red text-sm mt-3">{error}</p>}
+            <div className="flex gap-3 mt-5">
+              <button type="button" onClick={() => setReview(false)} disabled={submitting}
+                className="flex-1 border-[1.5px] border-sann-red/20 text-sann-text py-3 rounded-sm text-sm font-medium disabled:opacity-60">{tr.edit}</button>
+              <button type="button" onClick={doSubmit} disabled={submitting}
+                className="flex-1 bg-sann-red hover:bg-sann-red-dk text-white py-3 rounded-sm text-[0.78rem] tracking-[0.12em] uppercase font-bold disabled:opacity-60">{submitting ? tr.booking : tr.confirmBooking}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </form>
+  );
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between gap-4 py-2 text-sm">
+      <span className="text-sann-text-md shrink-0">{label}</span>
+      <span className="text-sann-text font-medium text-right">{value}</span>
+    </div>
   );
 }
 
