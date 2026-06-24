@@ -31,17 +31,30 @@ export default function PropertiesSection() {
 
 function Card({ p }: { p: Property }) {
   const soon = p.status === "coming-soon";
+  const houseHref = "/hatyai-private-house-near-lee-garden";
+  const linkable = p.id === "sann-stay-hatyai";
   return (
     <div className="bg-sann-card rounded-sann-xl overflow-hidden flex flex-col shadow-sann-md">
-      <div className="relative aspect-[16/10]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={p.images[0]}
-          alt={p.name}
-          className={`w-full h-full object-cover ${soon ? "grayscale-[.4] brightness-90" : ""}`}
-        />
+      <div className="relative aspect-[16/10] overflow-hidden">
+        {linkable ? (
+          <Link href={houseHref} className="block w-full h-full group" aria-label={`View ${p.name}`}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={p.images[0]}
+              alt={`${p.name} — private 4-bedroom house near Lee Garden Plaza, Hat Yai`}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+            />
+          </Link>
+        ) : (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={p.images[0]}
+            alt={p.name}
+            className={`w-full h-full object-cover ${soon ? "grayscale-[.4] brightness-90" : ""}`}
+          />
+        )}
         <div
-          className={`absolute top-3.5 left-3.5 px-3 py-1.5 text-[0.68rem] font-mono tracking-[0.12em] uppercase rounded-md text-white ${
+          className={`absolute top-3.5 left-3.5 px-3 py-1.5 text-[0.68rem] font-mono tracking-[0.12em] uppercase rounded-md text-white pointer-events-none ${
             soon ? "bg-[rgba(20,12,8,.7)]" : "bg-sann-red"
           }`}
         >
@@ -51,27 +64,27 @@ function Card({ p }: { p: Property }) {
 
       <div className="p-6 flex flex-col gap-3.5 flex-1">
         <div>
-          <div className="font-display text-3xl leading-tight text-sann-text">{p.name}</div>
+          <div className="font-display text-3xl leading-tight text-sann-text">
+            {linkable ? (
+              <Link href={houseHref} className="hover:text-sann-red transition-colors">
+                {p.name}
+              </Link>
+            ) : (
+              p.name
+            )}
+          </div>
           <div className="text-[0.82rem] text-sann-text-lt mt-1.5">{p.location}</div>
         </div>
 
         <p className="text-sm text-sann-text leading-relaxed m-0">{p.description}</p>
 
-        {p.id === "sann-stay-hatyai" && (
-          <div className="flex flex-col gap-1 -mt-0.5">
-            <Link
-              href="/hatyai-private-house-near-lee-garden"
-              className="text-[0.82rem] text-sann-red font-medium underline underline-offset-2 hover:text-sann-red-dk"
-            >
-              See our private house near Lee Garden Plaza →
-            </Link>
-            <Link
-              href="/ms/penginapan-hatyai-dekat-lee-garden"
-              className="text-[0.82rem] text-sann-red font-medium underline underline-offset-2 hover:text-sann-red-dk"
-            >
-              🇲🇾 Penginapan Hatyai untuk family Malaysia →
-            </Link>
-          </div>
+        {linkable && (
+          <Link
+            href="/ms/penginapan-hatyai-dekat-lee-garden"
+            className="text-[0.82rem] text-sann-red font-medium underline underline-offset-2 hover:text-sann-red-dk -mt-0.5"
+          >
+            🇲🇾 Untuk family Malaysia — baca dalam Bahasa Melayu →
+          </Link>
         )}
 
         <div className="grid grid-cols-2 gap-2 mt-1">
