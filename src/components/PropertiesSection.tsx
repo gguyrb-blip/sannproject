@@ -58,12 +58,20 @@ function Card({ p }: { p: Property }) {
         <p className="text-sm text-sann-text leading-relaxed m-0">{p.description}</p>
 
         {p.id === "sann-stay-hatyai" && (
-          <Link
-            href="/hatyai-private-house-near-lee-garden"
-            className="text-[0.82rem] text-sann-red font-medium underline underline-offset-2 hover:text-sann-red-dk -mt-0.5"
-          >
-            See our private house near Lee Garden Plaza →
-          </Link>
+          <div className="flex flex-col gap-1 -mt-0.5">
+            <Link
+              href="/hatyai-private-house-near-lee-garden"
+              className="text-[0.82rem] text-sann-red font-medium underline underline-offset-2 hover:text-sann-red-dk"
+            >
+              See our private house near Lee Garden Plaza →
+            </Link>
+            <Link
+              href="/ms/penginapan-hatyai-dekat-lee-garden"
+              className="text-[0.82rem] text-sann-red font-medium underline underline-offset-2 hover:text-sann-red-dk"
+            >
+              🇲🇾 Penginapan Hatyai untuk family Malaysia →
+            </Link>
+          </div>
         )}
 
         <div className="grid grid-cols-2 gap-2 mt-1">

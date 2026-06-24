@@ -8,6 +8,7 @@ import { TESTIMONIALS, CONTACT } from "@/lib/site-data";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://sannstay.com";
 const PATH = "/hatyai-private-house-near-lee-garden";
+const MS_PATH = "/ms/penginapan-hatyai-dekat-lee-garden";
 const URL = `${SITE}${PATH}`;
 const WHATSAPP = "https://wa.me/66629455541";
 const abs = (p: string) => (p.startsWith("http") ? p : `${SITE}${p}`);
@@ -19,7 +20,14 @@ const DESC =
 export const metadata: Metadata = {
   title: TITLE,
   description: DESC,
-  alternates: { canonical: PATH },
+  alternates: {
+    canonical: PATH,
+    languages: {
+      "en": URL,
+      "ms-MY": `${SITE}${MS_PATH}`,
+      "x-default": URL,
+    },
+  },
   keywords: [
     "private house in Hat Yai near Lee Garden",
     "family accommodation Hat Yai",
@@ -276,6 +284,17 @@ export default function HatyaiHousePage() {
             </div>
           </div>
         </section>
+
+        {/* language switch */}
+        <div className="bg-sann-bg2 text-center py-3 px-6 text-sm text-sann-text-md">
+          🇲🇾 Pelancong dari Malaysia?{" "}
+          <Link
+            href={MS_PATH}
+            className="text-sann-red font-medium underline underline-offset-2 hover:text-sann-red-dk"
+          >
+            Baca dalam Bahasa Melayu
+          </Link>
+        </div>
 
         {/* ─── 2. WHY STAY ─────────────────────────────────────── */}
         <section className="max-w-4xl mx-auto px-6 lg:px-10 py-16 lg:py-24 text-center">
