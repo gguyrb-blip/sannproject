@@ -57,6 +57,15 @@ function Card({ p }: { p: Property }) {
 
         <p className="text-sm text-sann-text leading-relaxed m-0">{p.description}</p>
 
+        {p.id === "sann-stay-hatyai" && (
+          <Link
+            href="/hatyai-private-house-near-lee-garden"
+            className="text-[0.82rem] text-sann-red font-medium underline underline-offset-2 hover:text-sann-red-dk -mt-0.5"
+          >
+            See our private house near Lee Garden Plaza →
+          </Link>
+        )}
+
         <div className="grid grid-cols-2 gap-2 mt-1">
           {p.amenities.slice(0, 4).map((a) => (
             <div key={a} className="flex items-center gap-2 text-[0.82rem] text-sann-text">
