@@ -1,3 +1,4 @@
+import StructuredData from "@/components/StructuredData";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import PropertiesSection from "@/components/PropertiesSection";
@@ -14,6 +15,7 @@ import RevealOnScroll from "@/components/RevealOnScroll";
 export default function HomePage() {
   return (
     <>
+      <StructuredData />
       <Header />
       <main>
         <Hero />

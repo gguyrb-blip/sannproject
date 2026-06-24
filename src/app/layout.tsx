@@ -23,22 +23,38 @@ const instrument = Instrument_Serif({
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://sannstay.com";
 
+const DESC =
+  "Sann Stay Hatyai — your own modern 4-bedroom house in the heart of Hat Yai, a 4-minute walk to Lee Garden Plaza. Sleeps up to 8, self check-in, air-con in every room, full kitchen. Book direct for the best rate.";
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Sann Stay — Where every stay feels like home",
+    default: "Sann Stay Hatyai — 4-Bedroom House near Lee Garden, Hat Yai",
     template: "%s · Sann Stay",
   },
-  description:
-    "Boutique accommodation in Hat Yai, Thailand. Cozy 4BR home & modern hostel.",
+  description: DESC,
+  keywords: [
+    "Hat Yai accommodation", "Hatyai hotel", "Sann Stay", "Sann Stay Hatyai",
+    "4 bedroom house Hat Yai", "Lee Garden Plaza hotel", "Hat Yai homestay",
+    "entire house Hat Yai", "ที่พักหาดใหญ่", "บ้านพักหาดใหญ่", "บ้านพักทั้งหลังหาดใหญ่",
+  ],
+  alternates: { canonical: "/" },
   openGraph: {
-    title: "Sann Stay — Where every stay feels like home",
-    description:
-      "Boutique accommodation in Hat Yai, Thailand. Cozy 4BR home & modern hostel.",
+    title: "Sann Stay Hatyai — 4-Bedroom House near Lee Garden",
+    description: DESC,
     url: SITE_URL,
     siteName: "Sann Stay",
+    locale: "en_US",
     type: "website",
+    images: [{ url: "/images/hero.jpg", width: 1200, height: 630, alt: "Sann Stay Hatyai — 4-bedroom house in Hat Yai" }],
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Sann Stay Hatyai — 4-Bedroom House near Lee Garden",
+    description: DESC,
+    images: ["/images/hero.jpg"],
+  },
+  robots: { index: true, follow: true },
   icons: { icon: "/favicon.ico" },
 };
 
