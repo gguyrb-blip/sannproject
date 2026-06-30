@@ -73,10 +73,11 @@ export default function GalleryGrid() {
                 {p.title}
               </span>
             </button>
-            <figcaption className="mt-3 px-0.5">
-              <div className="text-sann-text font-medium text-[0.95rem]">{p.title}</div>
-              <p className="text-sann-text-md text-[0.85rem] leading-[1.6] mt-1">{p.description}</p>
-            </figcaption>
+            {p.description && (
+              <figcaption className="mt-3 px-0.5">
+                <p className="text-sann-text-md text-[0.85rem] leading-[1.6]">{p.description}</p>
+              </figcaption>
+            )}
           </figure>
         ))}
       </div>

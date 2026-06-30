@@ -7,7 +7,7 @@ import GalleryGrid from "@/components/GalleryGrid";
 export const metadata: Metadata = {
   title: "Gallery",
   description:
-    "Explore Sann Stay Hatyai room by room — bedrooms, living room, kitchen, common area and exterior, each with details.",
+    "Explore Sann Stay Hatyai room by room — Room 1 to Room 4, the common area & kitchenette, and the exterior.",
 };
 
 export default function GalleryPage() {
@@ -24,8 +24,8 @@ export default function GalleryPage() {
           </h1>
           <div className="w-9 h-0.5 bg-sann-red mx-auto my-5 opacity-40" />
           <p className="font-serif italic text-lg text-sann-text-md leading-[1.7]">
-            A room-by-room look at our modern 3-storey house in Hat Yai — tap any
-            photo to view it larger with details.
+            A room-by-room look at our modern 3-storey house in Hat Yai — pick an
+            album, then tap any photo to view it larger.
           </p>
         </header>
 

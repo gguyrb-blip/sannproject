@@ -100,60 +100,29 @@ export const GALLERY_IMAGES = [
   { label: "Bedroom", src: "/images/gallery-4.jpg" },
 ];
 
-// Detailed, room-by-room gallery (shown on /gallery). Each photo has its own
-// description. To add more: drop the file in /public/images and add an entry.
-export type GalleryPhoto = { src: string; title: string; description: string };
+// Room-by-room gallery (shown on /gallery). Six albums, each pulling EVERY photo
+// from its folder under /public/images/gallery/<key>/. To refresh an album, drop
+// new files in that folder (named <key>-01.jpg, <key>-02.jpg, …) and update the
+// count below — nothing else to change.
+export type GalleryPhoto = { src: string; title: string; description?: string };
 export type GalleryCategory = { key: string; label: string; photos: GalleryPhoto[] };
 
+const album = (key: string, label: string, count: number): GalleryCategory => ({
+  key,
+  label,
+  photos: Array.from({ length: count }, (_, i) => ({
+    src: `/images/gallery/${key}/${key}-${String(i + 1).padStart(2, "0")}.jpg`,
+    title: label,
+  })),
+});
+
 export const GALLERY: GalleryCategory[] = [
-  {
-    key: "bedroom",
-    label: "Bedrooms · ห้องนอน",
-    photos: [
-      { src: "/images/hatyai/1.jpg", title: "Master bedroom", description: "A serene master bedroom with a plush queen bed, soft fresh linens and twin pendant lights. Blackout curtains and strong air-conditioning keep it cool and restful." },
-      { src: "/images/hatyai/2.jpg", title: "Bedroom with bathrobes", description: "A spacious bedroom in calm blue tones, with cosy bedding, fresh bathrobes and a quiet corner — comfortable for couples or family." },
-      { src: "/images/hatyai/3.jpg", title: "Warm-toned bedroom", description: "Another generously sized bedroom in warm neutral tones, with fresh towels, blackout curtains and cool air-conditioning." },
-      { src: "/images/gallery-4.jpg", title: "Bauhaus bedroom", description: "A bright bedroom finished with playful Bauhaus art, crisp white bedding and a bedside reading lamp." },
-    ],
-  },
-  {
-    key: "living",
-    label: "Living room · ห้องรับแขก",
-    photos: [
-      { src: "/images/hatyai/4.jpg", title: "Living room", description: "An open living room with a comfy modular daybed, smart TV and a leafy corner — the perfect place to relax together after a day out." },
-      { src: "/images/gallery-2.jpg", title: "Lounge corner", description: "A cosy lounge nook with a soft daybed, full-length mirror and a hand-woven rug for slow mornings." },
-    ],
-  },
-  {
-    key: "kitchen",
-    label: "Kitchen & dining · ห้องครัว",
-    photos: [
-      { src: "/images/gallery-1.jpg", title: "Kitchenette & dining", description: "A fully equipped kitchenette with microwave, kettle and drinking-water dispenser, plus a round dining table that seats the whole group." },
-    ],
-  },
-  {
-    key: "common",
-    label: "Common area · พื้นที่ส่วนกลาง",
-    photos: [
-      { src: "/images/hatyai/5.jpg", title: "Work & laundry corner", description: "A handy shared corner with a work desk and sorted laundry baskets — convenient for longer family or group stays." },
-    ],
-  },
-  {
-    key: "bathroom",
-    label: "Bathroom · ห้องน้ำ",
-    photos: [
-      { src: "/images/bathroom-1.png", title: "Bathroom · 1st floor", description: "A clean, bright ground-floor bathroom with a vanity mirror, hot-water shower and fresh fittings — handy for guests staying on the lower level." },
-      { src: "/images/bathroom-2.png", title: "Bathroom · 2nd floor", description: "A spacious upstairs bathroom with a warm-toned vanity, round basin, hot-water shower and a leafy touch." },
-    ],
-  },
-  {
-    key: "exterior",
-    label: "Exterior · ภายนอก",
-    photos: [
-      { src: "/images/exterior-2.jpg", title: "Front of the house", description: "The welcoming SANN entrance on a quiet Hat Yai street — just a 5-minute walk from Lee Garden Plaza." },
-      { src: "/images/gallery-3.jpg", title: "Entrance & balcony", description: "The wooden front door and private balcony of our modern 3-storey house." },
-    ],
-  },
+  album("common-area", "Common Area & Kitchenette · พื้นที่ส่วนกลาง", 7),
+  album("exterior", "Exterior · ภายนอก", 4),
+  album("room-1", "Room 1 · 1st floor", 13),
+  album("room-2", "Room 2 · 2nd floor", 7),
+  album("room-3", "Room 3 · 2nd floor", 13),
+  album("room-4", "Room 4 · 3rd floor", 5),
 ];
 
 // Real guest reviews from Sann Stay Hatyai.
