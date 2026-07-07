@@ -52,6 +52,7 @@ export async function POST(request: Request) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          property_slug: "hatyai",
           check_in_date: body.check_in_date,
           check_out_date: body.check_out_date,
           num_guests: body.number_of_guests ?? 1,

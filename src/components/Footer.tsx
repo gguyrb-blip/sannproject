@@ -56,9 +56,8 @@ export default function Footer() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-6 border-t border-sann-line text-xs text-sann-text-lt">
           <div>© {new Date().getFullYear()} Sann Stay · Made with ♥ in Hat Yai</div>
           <div className="flex gap-5">
-            <span>Privacy</span>
-            <span>Terms</span>
-            <span>TM.30 Notice</span>
+            <Link href="/privacy" className="hover:text-sann-red transition-colors">Privacy Notice</Link>
+            <Link href="/privacy" className="hover:text-sann-red transition-colors">TM.30 &amp; ร.ร.4</Link>
           </div>
         </div>
       </div>

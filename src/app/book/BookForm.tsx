@@ -77,7 +77,7 @@ export default function BookForm() {
   useEffect(() => {
     const saved = (typeof window !== "undefined" && localStorage.getItem("book_lang")) as Lang | null;
     if (saved === "en" || saved === "th") setLang(saved);
-    fetch(`${ADMIN_API}/api/public/availability`)
+    fetch(`${ADMIN_API}/api/public/availability?property_slug=hatyai`)
       .then((r) => r.json())
       .then((d) => { setBlocked(new Set(d.unavailable_dates ?? [])); setRates(d.rates ?? {}); setCleaningFee(d.cleaning_fee ?? 0); })
       .catch(() => {});
@@ -87,7 +87,7 @@ export default function BookForm() {
   useEffect(() => {
     if (!checkIn || !checkOut || checkOut <= checkIn) { setQuote(null); return; }
     let cancelled = false;
-    fetch(`${ADMIN_API}/api/public/quote?from=${checkIn}&to=${checkOut}`)
+    fetch(`${ADMIN_API}/api/public/quote?property_slug=hatyai&from=${checkIn}&to=${checkOut}`)
       .then((r) => r.json()).then((d) => { if (!cancelled) setQuote(d as Quote); }).catch(() => null);
     return () => { cancelled = true; };
   }, [checkIn, checkOut]);
