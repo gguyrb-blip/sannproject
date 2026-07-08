@@ -22,6 +22,12 @@ const T: Record<Lang, Record<string, string>> = {
     errDates: "กรุณาเลือกวันบนปฏิทิน", errName: "กรุณากรอกชื่อ", errTaken: "ช่วงวันที่เพิ่งถูกจอง กรุณาเลือกวันใหม่",
     review: "ตรวจสอบรายละเอียดการจอง", checkInL: "เช็กอิน", checkOutL: "เช็กเอาต์",
     confirmBooking: "ยืนยันการจอง →", edit: "← แก้ไข", noEmail: "—",
+    payTitle: "ชำระเงินผ่าน PromptPay", payDesc: "สแกน QR ด้านล่างด้วยแอปธนาคาร ชำระตามยอดรวม แล้วแนบสลิปพร้อมระบุยอดและเวลาที่โอน",
+    payAccount: "บัญชี: บจก. ซานน์ แอสเซนต์ (SANN ASCENT)",
+    slipLabel: "แนบสลิปการโอนเงิน *", slipPick: "แตะเพื่อเลือกรูปสลิปจากเครื่อง / คลังภาพ", slipChange: "เปลี่ยนรูปสลิป",
+    amountLabel: "ยอดเงินที่โอน (บาท) *", timeLabel: "วันและเวลาที่โอนตามสลิป *",
+    errSlip: "กรุณาแนบสลิปการโอนเงิน", errAmount: "กรุณาระบุยอดเงินที่โอน", errTime: "กรุณาระบุวันและเวลาที่โอน",
+    slipUploading: "กำลังอัปโหลดสลิป…", payVerifyNote: "ทีมงานจะตรวจสอบยอดโอนและยืนยันการจองทางอีเมล",
   },
   en: {
     pickDates: "Select your dates", guests: "Number of guests", property: "Property",
@@ -33,6 +39,12 @@ const T: Record<Lang, Record<string, string>> = {
     errDates: "Please pick dates on the calendar", errName: "Please enter your name", errTaken: "Those dates were just taken — pick new dates",
     review: "Review your booking", checkInL: "Check-in", checkOutL: "Check-out",
     confirmBooking: "Confirm booking →", edit: "← Edit", noEmail: "—",
+    payTitle: "Pay via PromptPay", payDesc: "Scan the QR below with any Thai banking app, pay the total, then attach your transfer slip with the amount and time of transfer.",
+    payAccount: "Account: Sann Ascent Co., Ltd. (SANN ASCENT)",
+    slipLabel: "Attach transfer slip *", slipPick: "Tap to choose the slip from your photos", slipChange: "Change slip photo",
+    amountLabel: "Amount transferred (THB) *", timeLabel: "Date & time of transfer (as on slip) *",
+    errSlip: "Please attach your transfer slip", errAmount: "Please enter the transferred amount", errTime: "Please enter the transfer date & time",
+    slipUploading: "Uploading slip…", payVerifyNote: "We verify the transfer and confirm your booking by email.",
   },
 };
 const fmtDate = (iso: string, l: Lang) => {
@@ -58,6 +70,11 @@ export default function BookForm() {
   const tr = T[lang];
   const [submitting, setSubmitting] = useState(false);
   const [review, setReview] = useState(false);
+  // PromptPay slip (required before confirming)
+  const [slipFile, setSlipFile] = useState<File | null>(null);
+  const [slipPreview, setSlipPreview] = useState<string | null>(null);
+  const [transferAmount, setTransferAmount] = useState("");
+  const [transferTime, setTransferTime] = useState("");
   const [done, setDone] = useState<{ ref: string | null; total: number; nights: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [blocked, setBlocked] = useState<Set<string>>(new Set());
@@ -149,13 +166,30 @@ export default function BookForm() {
     setReview(true);
   };
 
-  // Step 2 — confirmed in the review modal → actually create the booking
+  // Step 2 — confirmed in the review modal → upload the slip, then create the booking
   const doSubmit = async () => {
-    setError(null); setSubmitting(true);
+    setError(null);
+    if (!slipFile) return setError(tr.errSlip);
+    if (!transferAmount || !(Number(transferAmount) > 0)) return setError(tr.errAmount);
+    if (!transferTime) return setError(tr.errTime);
+    setSubmitting(true);
     try {
+      // 1) Upload the PromptPay slip to the booking engine (returns a storage path)
+      const fd = new FormData();
+      fd.append("file", slipFile);
+      const up = await fetch(`${ADMIN_API}/api/public/upload-slip`, { method: "POST", body: fd });
+      const upJ = await up.json().catch(() => ({}));
+      if (!up.ok || !upJ.path) throw new Error(upJ.error || tr.errSlip);
+
+      // 2) Create the booking with the slip details attached
       const res = await fetch("/api/booking-inquiries", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, check_in_date: checkIn, check_out_date: checkOut }),
+        body: JSON.stringify({
+          ...form, check_in_date: checkIn, check_out_date: checkOut,
+          slip_path: upJ.path,
+          transfer_amount: Number(transferAmount),
+          transfer_time: transferTime.replace("T", " "),
+        }),
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j.error || "Submission failed");
@@ -286,11 +320,56 @@ export default function BookForm() {
                 <div className="flex justify-between font-bold text-sann-red border-t border-sann-red/15 mt-2 pt-2"><span>{tr.total}</span><span>{fmt(quote.total)}</span></div>
               </div>
             )}
+            {/* ── PromptPay payment + slip ── */}
+            <div className="mt-5 border-t border-sann-line pt-4">
+              <p className="font-display text-lg text-sann-red">{tr.payTitle}</p>
+              <p className="text-[0.78rem] text-sann-text-md leading-[1.6] mt-1">{tr.payDesc}</p>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/images/payment-qr.jpg" alt="PromptPay QR — SANN ASCENT"
+                className="w-56 max-w-full mx-auto mt-3 rounded-md border border-sann-line" />
+              <p className="text-center text-[0.72rem] text-sann-text-md mt-1">{tr.payAccount}</p>
+
+              <div className="mt-4">
+                <span className="text-[0.6rem] tracking-[0.16em] uppercase text-sann-red font-semibold">{tr.slipLabel}</span>
+                <label className="mt-1 flex items-center justify-center gap-2 border-[1.5px] border-dashed border-sann-red/30 rounded-sm px-3 py-4 cursor-pointer bg-sann-cream/40 hover:bg-sann-cream/70 transition-colors">
+                  <input type="file" accept="image/*" className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) { setSlipFile(f); setSlipPreview(URL.createObjectURL(f)); }
+                    }} />
+                  {slipPreview ? (
+                    <span className="flex items-center gap-3">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={slipPreview} alt="slip" className="h-16 w-12 object-cover rounded border border-sann-line" />
+                      <span className="text-[0.78rem] text-sann-text underline">{tr.slipChange}</span>
+                    </span>
+                  ) : (
+                    <span className="text-[0.8rem] text-sann-text-md">📷 {tr.slipPick}</span>
+                  )}
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                <label className="flex flex-col gap-1">
+                  <span className="text-[0.6rem] tracking-[0.16em] uppercase text-sann-red font-semibold">{tr.amountLabel}</span>
+                  <input type="number" inputMode="decimal" min="0" step="0.01" value={transferAmount}
+                    onChange={(e) => setTransferAmount(e.target.value)}
+                    placeholder={quote ? String(quote.total) : ""} className={inputCls} />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[0.6rem] tracking-[0.16em] uppercase text-sann-red font-semibold">{tr.timeLabel}</span>
+                  <input type="datetime-local" value={transferTime}
+                    onChange={(e) => setTransferTime(e.target.value)} className={inputCls} />
+                </label>
+              </div>
+              <p className="text-[0.7rem] text-sann-text-lt mt-2">{tr.payVerifyNote}</p>
+            </div>
+
             {error && <p className="text-sann-red text-sm mt-3">{error}</p>}
             <div className="flex gap-3 mt-5">
               <button type="button" onClick={() => setReview(false)} disabled={submitting}
                 className="flex-1 border-[1.5px] border-sann-red/20 text-sann-text py-3 rounded-sm text-sm font-medium disabled:opacity-60">{tr.edit}</button>
-              <button type="button" onClick={doSubmit} disabled={submitting}
+              <button type="button" onClick={doSubmit} disabled={submitting || !slipFile || !transferAmount || !transferTime}
                 className="flex-1 bg-sann-red hover:bg-sann-red-dk text-white py-3 rounded-sm text-[0.78rem] tracking-[0.12em] uppercase font-bold disabled:opacity-60">{submitting ? tr.booking : tr.confirmBooking}</button>
             </div>
           </div>

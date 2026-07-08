@@ -13,6 +13,10 @@ type Payload = {
   phone_line?: string;
   email?: string;
   message?: string;
+  // PromptPay slip (uploaded to the booking engine beforehand)
+  slip_path?: string;
+  transfer_amount?: number;
+  transfer_time?: string;
 };
 
 export async function POST(request: Request) {
@@ -62,6 +66,9 @@ export async function POST(request: Request) {
             email: body.email?.trim() || undefined,
           },
           note: note || undefined,
+          slip_path: body.slip_path || undefined,
+          transfer_amount: body.transfer_amount ?? undefined,
+          transfer_time: body.transfer_time || undefined,
         }),
       });
       const j = (await res.json().catch(() => ({}))) as {
