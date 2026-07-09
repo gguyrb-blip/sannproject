@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PREFERRED_UNITS } from "@/lib/types";
 
 const ADMIN_API = "https://app.sannstay.com";
@@ -157,13 +157,17 @@ export default function BookForm() {
     );
   }
 
-  // Step 1 — validate then open the review summary (no submit yet)
+  const formRef = useRef<HTMLFormElement>(null);
+  const toTop = () => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  // Step 1 — validate then go to the review + payment step (full step, not a popup)
   const openReview = (e: React.FormEvent) => {
     e.preventDefault(); setError(null);
     if (!checkIn || !checkOut) return setError(tr.errDates);
     if (!form.guest_name.trim()) return setError(tr.errName);
     if (quote && !quote.available) return setError(quote.reason || tr.errTaken);
     setReview(true);
+    setTimeout(toTop, 30);
   };
 
   // Step 2 — confirmed in the review modal → upload the slip, then create the booking
@@ -204,10 +208,10 @@ export default function BookForm() {
   const blockedSubmit = !!(quote && !quote.available) || !checkIn || !checkOut;
 
   return (
-    <form onSubmit={openReview} className="max-w-2xl mx-auto bg-white border border-sann-red/10 rounded p-6 lg:p-8 shadow-[0_10px_36px_rgba(42,31,24,0.06)]">
+    <form ref={formRef} onSubmit={openReview} className="max-w-2xl mx-auto bg-white border border-sann-red/10 rounded p-6 lg:p-8 shadow-[0_10px_36px_rgba(42,31,24,0.06)] scroll-mt-24">
       {/* Header + language toggle */}
       <div className="flex items-center justify-between mb-3">
-        <p className="text-[0.7rem] tracking-[0.16em] uppercase text-sann-red font-semibold">{tr.pickDates}</p>
+        <p className="text-[0.7rem] tracking-[0.16em] uppercase text-sann-red font-semibold">{review ? tr.review : tr.pickDates}</p>
         <div className="flex border border-sann-red/15 rounded overflow-hidden">
           {(["th", "en"] as Lang[]).map((l) => (
             <button key={l} type="button" onClick={() => setLanguage(l)}
@@ -218,6 +222,8 @@ export default function BookForm() {
         </div>
       </div>
 
+      {/* ── Step 1: dates + guest details ── */}
+      {!review && (<>
       {/* Calendar */}
       <div className="flex items-center justify-between mb-2">
         <button type="button" onClick={() => shiftMonth(-1)} className="w-9 h-9 border border-sann-red/15 rounded text-sann-red">‹</button>
@@ -296,13 +302,12 @@ export default function BookForm() {
         {submitting ? tr.booking : tr.book}
       </button>
       <p className="text-center text-[0.7rem] text-sann-text-lt mt-2">{tr.instant}</p>
+      </>)}
 
-      {/* Review summary before final confirm */}
+      {/* ── Step 2: review + PromptPay payment (full step, no popup) ── */}
       {review && (
-        <div className="fixed inset-0 z-[60] bg-black/45 flex items-center justify-center p-4" onClick={() => !submitting && setReview(false)}>
-          <div className="bg-white rounded-lg w-full max-w-md p-6 shadow-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <h3 className="font-display text-xl text-sann-text">{tr.review}</h3>
-            <div className="w-8 h-0.5 bg-sann-red/40 mt-2 mb-4" />
+        <div>
+            <div className="w-8 h-0.5 bg-sann-red/40 mb-4" />
             <div className="divide-y divide-sann-line/60">
               <SummaryRow label={tr.property} value={form.preferred_unit} />
               <SummaryRow label={tr.checkInL} value={checkIn ? fmtDate(checkIn, lang) : "—"} />
@@ -367,12 +372,11 @@ export default function BookForm() {
 
             {error && <p className="text-sann-red text-sm mt-3">{error}</p>}
             <div className="flex gap-3 mt-5">
-              <button type="button" onClick={() => setReview(false)} disabled={submitting}
+              <button type="button" onClick={() => { setReview(false); setTimeout(toTop, 30); }} disabled={submitting}
                 className="flex-1 border-[1.5px] border-sann-red/20 text-sann-text py-3 rounded-sm text-sm font-medium disabled:opacity-60">{tr.edit}</button>
               <button type="button" onClick={doSubmit} disabled={submitting || !slipFile || !transferAmount || !transferTime}
                 className="flex-1 bg-sann-red hover:bg-sann-red-dk text-white py-3 rounded-sm text-[0.78rem] tracking-[0.12em] uppercase font-bold disabled:opacity-60">{submitting ? tr.booking : tr.confirmBooking}</button>
             </div>
-          </div>
         </div>
       )}
     </form>
