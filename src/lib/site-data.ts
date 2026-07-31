@@ -57,7 +57,7 @@ export const PROPERTIES: Property[] = [
   {
     id: "sann-thung-sao-hostel",
     name: "Sann Thung Sao Hostel",
-    tag: "Opening Soon",
+    tag: "Now Open",
     location: "📍 Near Bus Station & ASEAN Night Bazaar · Hat Yai",
     description:
       "Comfortable and convenient hostel in the Thung Sao area. Choose between bunkbed dorms (sold per bed, 2 rooms available) or a Family Room with 2 queen beds for up to 4 guests.",
@@ -72,7 +72,7 @@ export const PROPERTIES: Property[] = [
     price: "฿350",
     priceUnit: "/ bed / night",
     images: ["/images/thungsao-3.jpg"],
-    status: "coming-soon",
+    status: "open",
   },
 ];
 

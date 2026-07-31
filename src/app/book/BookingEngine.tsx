@@ -8,7 +8,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 //   /api/public/upload-slip   → PromptPay slip storage
 // and creates the booking through this site's /api/booking-inquiries (which
 // forwards to the PMS and archives the lead).
-const ADMIN_API = "https://app.sannstay.com";
+// Override with NEXT_PUBLIC_ADMIN_API to point local dev at a local PMS.
+const ADMIN_API = process.env.NEXT_PUBLIC_ADMIN_API || "https://app.sannstay.com";
 
 const ymd = (d: Date) => d.toISOString().slice(0, 10);
 const todayISO = () => ymd(new Date());
@@ -23,6 +24,7 @@ interface PropertyOption {
   location: Record<Lang, string>;
   blurb: Record<Lang, string>;
   image: string;
+  mapUrl: string;
   priceFrom: string;
   priceUnit: Record<Lang, string>;
   /** Whole-property stays black out a whole date once booked; a hostel does not. */
@@ -36,6 +38,7 @@ const PROPERTIES: PropertyOption[] = [
     location: { th: "4 นาทีถึงลีการ์เดนส์ · หาดใหญ่", en: "4 min to Lee Gardens · Hat Yai" },
     blurb: { th: "บ้านทั้งหลัง 4 ห้องนอน · พักได้ถึง 8 ท่าน", en: "Whole 4-bedroom house · sleeps up to 8" },
     image: "/images/hatyai/1.jpg",
+    mapUrl: "https://www.google.com/maps/place/Sann+Stay+Hatyai/@7.00601,100.4706869,17z/data=!4m9!3m8!1s0x304d2953de62bf23:0xe80e20b508560ada!5m2!4m1!1i2!8m2!3d7.00601!4d100.4732618!16s%2Fg%2F11zb2h83ng",
     priceFrom: "฿3,200",
     priceUnit: { th: "/ คืน", en: "/ night" },
     wholeProperty: true,
@@ -46,6 +49,7 @@ const PROPERTIES: PropertyOption[] = [
     location: { th: "ใกล้สถานีขนส่ง · หาดใหญ่", en: "Near the bus station · Hat Yai" },
     blurb: { th: "เตียงดอร์ม และห้องส่วนตัว", en: "Dorm beds & private rooms" },
     image: "/images/thungsao-3.jpg",
+    mapUrl: "https://www.google.com/maps/place/Sann+Thungsao+Hostel/@6.996861,100.4786758,16z/data=!3m1!4b1!4m9!3m8!1s0x304d290015b65f15:0x79ae42eadb876d81!5m2!4m1!1i2!8m2!3d6.9968557!4d100.4812507!16s%2Fg%2F11njf7jt3d",
     priceFrom: "฿350",
     priceUnit: { th: "/ เตียง / คืน", en: "/ bed / night" },
     wholeProperty: false,
@@ -97,6 +101,7 @@ const T: Record<Lang, Record<string, string>> = {
     verifyNote: "ทีมงานจะตรวจสอบยอดโอนและยืนยันการจองทางอีเมล",
     success: "จองสำเร็จแล้ว!", sentEmail: "เราได้ส่งรายละเอียดทางอีเมลแล้ว ขอบคุณค่ะ 🙏",
     bookingNo: "เลขที่การจอง", errTaken: "ห้องเพิ่งถูกจองไป กรุณาเลือกใหม่", change: "เปลี่ยน",
+    viewMap: "ดูแผนที่",
   },
   en: {
     step1: "Choose your stay", step2: "Select your dates", step3: "Choose a room",
@@ -121,6 +126,7 @@ const T: Record<Lang, Record<string, string>> = {
     verifyNote: "We verify the transfer and confirm your booking by email.",
     success: "Booking confirmed!", sentEmail: "We've sent the details to your email. Thank you! 🙏",
     bookingNo: "Booking number", errTaken: "That room was just taken — please choose again", change: "Change",
+    viewMap: "View map",
   },
 };
 
@@ -247,9 +253,10 @@ export default function BookingEngine() {
     [options, qty],
   );
   const roomsTotal = picked.reduce((s, p) => s + p.unit.total * p.n, 0);
-  // The house quote already includes its cleaning fee in unit.total; only add it
-  // separately when a fee exists and nothing has been added yet.
-  const grandTotal = roomsTotal;
+  // unit.total is rooms only. The cleaning fee is charged ONCE per stay (houses
+  // only — the hostel returns 0), so add it whenever something is selected.
+  const cleaningFee = picked.length > 0 ? options?.cleaning_fee ?? 0 : 0;
+  const grandTotal = roomsTotal + cleaningFee;
 
   function pickSlip(f: File | null) {
     setSlipFile(f);
@@ -347,21 +354,30 @@ export default function BookingEngine() {
       {step === "property" && (
         <div className="grid sm:grid-cols-2 gap-4">
           {PROPERTIES.map((p) => (
-            <button key={p.slug} type="button"
-              onClick={() => { setProperty(p); setStep("dates"); setTimeout(toTop, 30); }}
-              className={`${card} overflow-hidden text-left hover:border-sann-red transition group`}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.image} alt={p.name} className="w-full h-40 object-cover group-hover:scale-[1.03] transition duration-500" />
-              <div className="p-4">
-                <h3 className="font-display text-xl text-sann-text leading-tight">{p.name}</h3>
-                <p className="text-[0.75rem] text-sann-text-lt mt-0.5">{p.location[lang]}</p>
-                <p className="text-[0.8rem] text-sann-text-md mt-2 leading-relaxed">{p.blurb[lang]}</p>
-                <p className="mt-3 text-sann-red font-semibold">
-                  <span className="text-[0.7rem] text-sann-text-lt font-normal">{tr.from} </span>
-                  {p.priceFrom}<span className="text-[0.7rem] font-normal">{p.priceUnit[lang]}</span>
-                </p>
-              </div>
-            </button>
+            // The card is a plain container: the map link must not be nested
+            // inside the select button (invalid HTML + the clicks would fight).
+            <div key={p.slug} className={`${card} overflow-hidden flex flex-col group hover:border-sann-red transition`}>
+              <button type="button" className="text-left"
+                onClick={() => { setProperty(p); setStep("dates"); setTimeout(toTop, 30); }}>
+                <span className="block overflow-hidden">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={p.image} alt={p.name} className="w-full h-40 object-cover group-hover:scale-[1.03] transition duration-500" />
+                </span>
+                <span className="block px-4 pt-4">
+                  <span className="block font-display text-xl text-sann-text leading-tight">{p.name}</span>
+                  <span className="block text-[0.8rem] text-sann-text-md mt-1.5 leading-relaxed">{p.blurb[lang]}</span>
+                  <span className="block mt-3 text-sann-red font-semibold">
+                    <span className="text-[0.7rem] text-sann-text-lt font-normal">{tr.from} </span>
+                    {p.priceFrom}<span className="text-[0.7rem] font-normal">{p.priceUnit[lang]}</span>
+                  </span>
+                </span>
+              </button>
+              <a href={p.mapUrl} target="_blank" rel="noopener noreferrer"
+                className="mt-3 mb-4 mx-4 inline-flex items-start gap-1.5 text-[0.75rem] text-sann-text-lt hover:text-sann-red transition">
+                <span aria-hidden>📍</span>
+                <span className="underline underline-offset-2 decoration-sann-red/30">{p.location[lang]} · {tr.viewMap}</span>
+              </a>
+            </div>
           ))}
         </div>
       )}
@@ -497,9 +513,23 @@ export default function BookingEngine() {
           )}
 
           {picked.length > 0 && (
-            <div className="mt-5 pt-4 border-t border-sann-line flex items-center justify-between">
-              <span className="text-sm text-sann-text-md">{tr.total}</span>
-              <span className="font-display text-2xl text-sann-red">{fmt(grandTotal)}</span>
+            <div className="mt-5 pt-4 border-t border-sann-line flex flex-col gap-1.5">
+              {picked.map((p) => (
+                <div key={p.unit.key} className="flex justify-between gap-3 text-sm text-sann-text-md">
+                  <span>{p.unit.label}{p.n > 1 ? ` × ${p.n}` : ""}</span>
+                  <span className="font-mono">{fmt(p.unit.total * p.n)}</span>
+                </div>
+              ))}
+              {cleaningFee > 0 && (
+                <div className="flex justify-between gap-3 text-sm text-sann-text-md">
+                  <span>{tr.cleaning}</span>
+                  <span className="font-mono">{fmt(cleaningFee)}</span>
+                </div>
+              )}
+              <div className="flex items-center justify-between pt-2 mt-1 border-t border-sann-line">
+                <span className="text-sm font-semibold text-sann-text">{tr.total}</span>
+                <span className="font-display text-2xl text-sann-red">{fmt(grandTotal)}</span>
+              </div>
             </div>
           )}
 
@@ -568,6 +598,12 @@ export default function BookingEngine() {
                   <span className="font-mono">{fmt(p.unit.total * p.n)}</span>
                 </div>
               ))}
+              {cleaningFee > 0 && (
+                <div className="flex justify-between gap-3">
+                  <span>{tr.cleaning}</span>
+                  <span className="font-mono">{fmt(cleaningFee)}</span>
+                </div>
+              )}
             </div>
             <div className="mt-3 pt-3 border-t border-sann-red/10 flex justify-between items-baseline">
               <span className="font-semibold text-sann-text">{tr.total}</span>
