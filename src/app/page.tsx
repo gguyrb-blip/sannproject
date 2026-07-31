@@ -9,7 +9,7 @@ import FAQSection from "@/components/FAQSection";
 import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
 import StickyBookingBar from "@/components/StickyBookingBar";
-import LineFloat from "@/components/LineFloat";
+import WhatsAppFloat from "@/components/WhatsAppFloat";
 import RevealOnScroll from "@/components/RevealOnScroll";
 
 export default function HomePage() {
@@ -27,7 +27,7 @@ export default function HomePage() {
         <CTASection />
       </main>
       <Footer />
-      <LineFloat />
+      <WhatsAppFloat />
       <StickyBookingBar />
       <RevealOnScroll />
     </>

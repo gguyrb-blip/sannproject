@@ -59,7 +59,11 @@ const PROPERTIES: PropertyOption[] = [
 interface Unit {
   key: string;
   kind: "whole" | "dorm" | "room";
+  // label / bedInfo / description are authored by staff in the PMS
+  // (Admin → Rooms) — never hardcode room copy here.
   label: string;
+  bedInfo: string | null;
+  description: string | null;
   roomNumber: string | null;
   capacity: number;
   pricePerNight: number;
@@ -485,8 +489,19 @@ export default function BookingEngine() {
                     <div className="flex items-start justify-between gap-3 flex-wrap">
                       <div className="min-w-[55%]">
                         <p className="font-semibold text-sann-text">{u.label}</p>
-                        <p className="text-[0.72rem] text-sann-text-lt mt-0.5">
-                          {u.kind === "dorm"
+                        {u.bedInfo && (
+                          <p className="text-[0.78rem] text-sann-text-md mt-1">{u.bedInfo}</p>
+                        )}
+                        {u.description && (
+                          <p className="text-[0.75rem] text-sann-text-lt mt-1 leading-relaxed whitespace-pre-line">{u.description}</p>
+                        )}
+                        <p className="text-[0.72rem] text-sann-text-lt mt-1.5">
+                          {/* bed_info already states the sleeping arrangement when
+                              set, so only the stock "sleeps N" line is dropped —
+                              availability always shows. */}
+                          {u.bedInfo
+                            ? out ? tr.soldOut : `${tr.left} ${u.availableCount}`
+                            : u.kind === "dorm"
                             ? `${lang === "th" ? "ต่อเตียง" : "per bed"} · ${out ? tr.soldOut : `${tr.left} ${u.availableCount}`}`
                             : `${lang === "th" ? "พักได้ถึง" : "sleeps"} ${u.capacity} · ${out ? tr.soldOut : `${tr.left} ${u.availableCount}`}`}
                         </p>

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import LineFloat from "@/components/LineFloat";
+import WhatsAppFloat from "@/components/WhatsAppFloat";
 import BookingEngine from "./BookingEngine";
 
 export const metadata: Metadata = {
@@ -30,7 +30,7 @@ export default function BookPage() {
         <BookingEngine />
       </main>
       <Footer />
-      <LineFloat />
+      <WhatsAppFloat />
     </>
   );
 }

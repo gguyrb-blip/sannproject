@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import LineFloat from "@/components/LineFloat";
+import WhatsAppFloat from "@/components/WhatsAppFloat";
 import CheckinForm from "./CheckinForm";
 
 export const metadata: Metadata = {
@@ -31,7 +31,7 @@ export default function CheckinPage() {
         <CheckinForm />
       </main>
       <Footer />
-      <LineFloat />
+      <WhatsAppFloat />
     </>
   );
 }

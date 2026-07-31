@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import LineFloat from "@/components/LineFloat";
+import WhatsAppFloat from "@/components/WhatsAppFloat";
 import {
   GOOGLE_MAPS_EMBED_URL,
   GOOGLE_MAPS_OPEN_URL,
@@ -78,7 +78,7 @@ export default function LocationPage() {
         </div>
       </main>
       <Footer />
-      <LineFloat />
+      <WhatsAppFloat />
     </>
   );
 }

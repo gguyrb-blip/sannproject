@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import LineFloat from "@/components/LineFloat";
+import WhatsAppFloat from "@/components/WhatsAppFloat";
 import { TESTIMONIALS, CONTACT } from "@/lib/site-data";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://sannstay.com";
@@ -505,7 +505,7 @@ export default function HatyaiHousePage() {
       </main>
 
       <Footer />
-      <LineFloat />
+      <WhatsAppFloat />
     </>
   );
 }
