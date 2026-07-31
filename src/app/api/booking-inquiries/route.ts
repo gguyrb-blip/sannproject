@@ -13,6 +13,10 @@ type Payload = {
   phone_line?: string;
   email?: string;
   message?: string;
+  // Which property the guest picked, and (hostel only) the units they chose.
+  // Defaults to hatyai so older clients keep working unchanged.
+  property_slug?: string;
+  units?: { key: string; qty: number }[];
   // PromptPay slip (uploaded to the booking engine beforehand)
   slip_path?: string;
   transfer_amount?: number;
@@ -40,6 +44,9 @@ export async function POST(request: Request) {
   // app.sannstay.com/admin/bookings, and the engine sends the guest
   // confirmation + hotel notification (with booking ref + total).
   let adminBookingRef: string | null = null;
+  let adminBookingRefs: string[] = [];
+  let adminUnitSummary: string | null = null;
+  let adminTotal: number | null = null;
   let adminUnavailable = false;
   let adminErrored = false;
   if (body.check_in_date && body.check_out_date) {
@@ -56,7 +63,8 @@ export async function POST(request: Request) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          property_slug: "hatyai",
+          property_slug: body.property_slug || "hatyai",
+          units: body.units?.length ? body.units : undefined,
           check_in_date: body.check_in_date,
           check_out_date: body.check_out_date,
           num_guests: body.number_of_guests ?? 1,
@@ -73,9 +81,18 @@ export async function POST(request: Request) {
       });
       const j = (await res.json().catch(() => ({}))) as {
         booking_ref?: string;
+        booking_refs?: string[];
+        unit_summary?: string | null;
+        total_amount?: number;
       };
-      if (res.ok && j?.booking_ref) adminBookingRef = j.booking_ref;
-      else if (res.status === 409) adminUnavailable = true;
+      if (res.ok && j?.booking_ref) {
+        adminBookingRef = j.booking_ref;
+        // A hostel stay comes back as one ref per bed — keep them all for the
+        // confirmation screen.
+        adminBookingRefs = j.booking_refs ?? [j.booking_ref];
+        adminUnitSummary = j.unit_summary ?? null;
+        adminTotal = j.total_amount ?? null;
+      } else if (res.status === 409) adminUnavailable = true;
       else adminErrored = true;
     } catch (e) {
       console.error("forward to admin PMS failed", e);
@@ -148,6 +165,9 @@ export async function POST(request: Request) {
   return NextResponse.json({
     ok: true,
     booking_ref: adminBookingRef,
+    booking_refs: adminBookingRefs,
+    unit_summary: adminUnitSummary,
+    total_amount: adminTotal,
     unavailable: adminUnavailable,
   });
 }
