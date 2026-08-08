@@ -53,8 +53,15 @@ export default function Footer() {
           </FooterCol>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-6 border-t border-sann-line text-xs text-sann-text-lt">
-          <div>© {new Date().getFullYear()} Sann Stay · Made with ♥ in Hat Yai</div>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 pt-6 border-t border-sann-line text-xs text-sann-text-lt">
+          <div>
+            {/* Operating entity — required on the pages that take payment. */}
+            <div className="text-sann-text">SANN ASCENT CO., LTD.</div>
+            <div className="font-mono text-[0.68rem] mt-0.5">
+              Company Registration No. 0905569003322
+            </div>
+            <div className="mt-1.5">© {new Date().getFullYear()} Sann Stay · Made with ♥ in Hat Yai</div>
+          </div>
           <div className="flex gap-5">
             <Link href="/privacy" className="hover:text-sann-red transition-colors">Privacy Notice</Link>
             <Link href="/privacy" className="hover:text-sann-red transition-colors">TM.30 &amp; ร.ร.4</Link>
