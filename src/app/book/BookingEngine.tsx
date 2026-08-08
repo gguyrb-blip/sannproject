@@ -96,6 +96,9 @@ const T: Record<Lang, Record<string, string>> = {
     msgPh: "เวลาถึงโดยประมาณ คำขอพิเศษ ฯลฯ",
     errName: "กรุณากรอกชื่อผู้จอง", errContact: "กรุณากรอกอีเมลหรือเบอร์โทรอย่างน้อย 1 อย่าง",
     payTitle: "ชำระเงินผ่าน PromptPay",
+    policyTitle: "นโยบายการยกเลิก",
+    policyFree: "ยกเลิกได้ฟรี จนถึง 7 วันก่อนวันเข้าพัก",
+    policyCharge: "หากยกเลิกภายใน 7 วันก่อนวันเข้าพัก หรือไม่เข้าพักโดยไม่แจ้งล่วงหน้า (No-show) จะถูกเรียกเก็บเต็มจำนวนของการจอง",
     payDesc: "สแกน QR ด้วยแอปธนาคาร โอนตามยอดรวม แล้วแนบสลิปพร้อมระบุยอดและเวลาที่โอน",
     payAccount: "บัญชี: บจก. ซานน์ แอสเซนต์ (SANN ASCENT)",
     slipLabel: "แนบสลิปการโอนเงิน *", slipPick: "แตะเพื่อเลือกรูปสลิปจากเครื่อง",
@@ -121,6 +124,9 @@ const T: Record<Lang, Record<string, string>> = {
     msgPh: "Estimated arrival time, special requests, etc.",
     errName: "Please enter your name", errContact: "Please provide an email or phone number",
     payTitle: "Pay via PromptPay",
+    policyTitle: "Cancellation Policy",
+    policyFree: "The guest can cancel free of charge until 7 days before arrival.",
+    policyCharge: "The guest will be charged the total price of the reservation if they cancel in the 7 days before arrival and no show.",
     payDesc: "Scan the QR with any Thai banking app, pay the total, then attach your slip with the amount and time.",
     payAccount: "Account: Sann Ascent Co., Ltd. (SANN ASCENT)",
     slipLabel: "Attach transfer slip *", slipPick: "Tap to choose the slip from your photos",
@@ -667,6 +673,18 @@ export default function BookingEngine() {
             <p className="text-[0.72rem] text-sann-text-lt mt-3">{tr.verifyNote}</p>
           </div>
 
+          {/* Payment providers require the cancellation terms to be visible
+              before the guest pays, not only in the FAQ. */}
+          <div className="mt-5 rounded-sann-md border border-sann-red/15 bg-sann-cream/60 p-4">
+            <p className="text-[0.7rem] uppercase tracking-[0.12em] font-semibold text-sann-red mb-2">
+              {tr.policyTitle}
+            </p>
+            <ul className="text-[0.78rem] text-sann-text-md leading-[1.7] list-disc pl-4 space-y-1">
+              <li>{tr.policyFree}</li>
+              <li>{tr.policyCharge}</li>
+            </ul>
+          </div>
+
           <div className="flex items-center justify-between mt-6">
             <button type="button" className={btnGhost} disabled={submitting} onClick={() => setStep("details")}>{tr.back}</button>
             <button type="button" className={btnPrimary} disabled={submitting} onClick={submit}>
@@ -691,6 +709,15 @@ export default function BookingEngine() {
           <p className="text-sann-text-md leading-[1.7] mt-2">
             {done.nights} {tr.nights} · {fmt(done.total)}<br />{tr.sentEmail}
           </p>
+          <div className="mt-6 text-left rounded-sann-md border border-sann-line bg-sann-cream/50 p-4">
+            <p className="text-[0.7rem] uppercase tracking-[0.12em] font-semibold text-sann-red mb-2">
+              {tr.policyTitle}
+            </p>
+            <ul className="text-[0.78rem] text-sann-text-md leading-[1.7] list-disc pl-4 space-y-1">
+              <li>{tr.policyFree}</li>
+              <li>{tr.policyCharge}</li>
+            </ul>
+          </div>
         </div>
       )}
     </div>

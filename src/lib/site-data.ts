@@ -202,7 +202,7 @@ export const FAQS = [
   },
   {
     q: "What's the cancellation policy?",
-    a: "Our cancellation policy may vary depending on the date, rate plan, and booking platform. For direct bookings, free cancellation is usually available up to 3 days before check-in. For Airbnb and Booking.com, please refer to the policy displayed on each platform before confirming your stay.",
+    a: "For direct bookings on this website: the guest can cancel free of charge until 7 days before arrival. The guest will be charged the total price of the reservation if they cancel in the 7 days before arrival and no show. For Airbnb and Booking.com, please refer to the policy displayed on each platform before confirming your stay.",
   },
 ];
 
