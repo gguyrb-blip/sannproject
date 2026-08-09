@@ -64,6 +64,10 @@ interface Unit {
   label: string;
   bedInfo: string | null;
   description: string | null;
+  // Uploaded in Admin → Rooms; first photo is the cover. Amenities arrive
+  // already labelled by the PMS so there is no catalogue to keep in sync here.
+  photos: string[];
+  amenities: { key: string; th: string; en: string; icon: string }[];
   roomNumber: string | null;
   capacity: number;
   pricePerNight: number;
@@ -71,6 +75,45 @@ interface Unit {
   availableCount: number;
   maxQty: number;
 }
+// Room photos: a cover thumbnail on the card that opens a full-screen viewer.
+function PhotoViewer({ photos, start, label, onClose }: {
+  photos: string[]; start: number; label: string; onClose: () => void;
+}) {
+  const [i, setI] = useState(start);
+  const go = useCallback((d: number) => setI((v) => (v + d + photos.length) % photos.length), [photos.length]);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowRight") go(1);
+      if (e.key === "ArrowLeft") go(-1);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [go, onClose]);
+
+  return (
+    <div onClick={onClose} role="dialog" aria-modal="true" aria-label={label}
+      className="fixed inset-0 z-[100] bg-black/90 flex flex-col items-center justify-center p-4">
+      <button type="button" onClick={onClose} aria-label="close"
+        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/15 text-white text-xl leading-none">×</button>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={photos[i]} alt={label} onClick={(e) => e.stopPropagation()}
+        className="max-h-[78vh] max-w-full object-contain rounded-sann-md" />
+      <p className="text-white/80 text-xs mt-3">{label} · {i + 1}/{photos.length}</p>
+      {photos.length > 1 && (
+        <>
+          <button type="button" aria-label="previous"
+            onClick={(e) => { e.stopPropagation(); go(-1); }}
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/15 text-white text-2xl leading-none">‹</button>
+          <button type="button" aria-label="next"
+            onClick={(e) => { e.stopPropagation(); go(1); }}
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/15 text-white text-2xl leading-none">›</button>
+        </>
+      )}
+    </div>
+  );
+}
+
 interface StayOptions {
   property: { slug: string; name: string; type: string; check_in_time: string | null; check_out_time: string | null };
   nights: number;
@@ -89,6 +132,7 @@ const T: Record<Lang, Record<string, string>> = {
     searchRooms: "ค้นหาห้องว่าง →", checkIn: "เช็กอิน", checkOut: "เช็กเอาต์",
     booked: "จองแล้ว", pickDatesFirst: "กรุณาเลือกวันบนปฏิทิน",
     soldOut: "เต็มแล้ว", left: "เหลือ", perNight: "/ คืน", stayTotal: "รวมทั้งพัก",
+    viewPhotos: "ดูรูป",
     noRooms: "ไม่มีห้องว่างในช่วงวันที่เลือก กรุณาเลือกวันอื่น",
     closedRange: "ช่วงวันนี้ปิดรับเข้าพัก", selectAtLeastOne: "กรุณาเลือกห้องหรือเตียงอย่างน้อย 1 รายการ",
     cleaning: "ค่าทำความสะอาด", total: "รวมทั้งหมด", continue: "ดำเนินการต่อ →", back: "← ย้อนกลับ",
@@ -117,6 +161,7 @@ const T: Record<Lang, Record<string, string>> = {
     searchRooms: "Search rooms →", checkIn: "Check-in", checkOut: "Check-out",
     booked: "Booked", pickDatesFirst: "Please pick your dates on the calendar",
     soldOut: "Sold out", left: "left", perNight: "/ night", stayTotal: "total stay",
+    viewPhotos: "View photos",
     noRooms: "No rooms available for those dates — please try different dates.",
     closedRange: "These dates are closed", selectAtLeastOne: "Please select at least one room or bed",
     cleaning: "Cleaning fee", total: "Total", continue: "Continue →", back: "← Back",
@@ -176,6 +221,7 @@ export default function BookingEngine() {
   const [options, setOptions] = useState<StayOptions | null>(null);
   const [loadingRooms, setLoadingRooms] = useState(false);
   const [qty, setQty] = useState<Record<string, number>>({});
+  const [viewer, setViewer] = useState<{ photos: string[]; label: string; start: number } | null>(null);
 
   // guest details
   const [form, setForm] = useState({ guest_name: "", phone_line: "", email: "", message: "" });
@@ -249,7 +295,14 @@ export default function BookingEngine() {
       const r = await fetch(`${ADMIN_API}/api/public/stay-options?property_slug=${property.slug}&from=${checkIn}&to=${checkOut}&lang=${lang}`);
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || "error");
-      setOptions(d as StayOptions);
+      // photos/amenities are newer fields — an older PMS deploy omits them.
+      const o = d as StayOptions;
+      o.units = (o.units ?? []).map((u) => ({
+        ...u,
+        photos: Array.isArray(u.photos) ? u.photos : [],
+        amenities: Array.isArray(u.amenities) ? u.amenities : [],
+      }));
+      setOptions(o);
       setQty({});
       setStep("rooms");
       setTimeout(toTop, 30);
@@ -492,6 +545,18 @@ export default function BookingEngine() {
                 const out = u.availableCount < 1;
                 return (
                   <div key={u.key} className={`border rounded-sann-md p-4 ${out ? "border-sann-line bg-sann-cream/40 opacity-60" : n > 0 ? "border-sann-red bg-sann-red/[0.04]" : "border-sann-red/10"}`}>
+                    {u.photos.length > 0 && (
+                      <button type="button" onClick={() => setViewer({ photos: u.photos, label: u.label, start: 0 })}
+                        aria-label={`${u.label} — ${tr.viewPhotos}`}
+                        className="relative block w-full mb-3 rounded-sann-md overflow-hidden">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={u.photos[0]} alt={u.label} loading="lazy"
+                          className="w-full h-36 sm:h-44 object-cover" />
+                        <span className="absolute bottom-2 right-2 rounded-full bg-black/55 text-white text-[0.68rem] px-2.5 py-1">
+                          {u.photos.length > 1 ? `📷 ${u.photos.length} · ${tr.viewPhotos}` : `📷 ${tr.viewPhotos}`}
+                        </span>
+                      </button>
+                    )}
                     <div className="flex items-start justify-between gap-3 flex-wrap">
                       <div className="min-w-[55%]">
                         <p className="font-semibold text-sann-text">{u.label}</p>
@@ -500,6 +565,16 @@ export default function BookingEngine() {
                         )}
                         {u.description && (
                           <p className="text-[0.75rem] text-sann-text-lt mt-1 leading-relaxed whitespace-pre-line">{u.description}</p>
+                        )}
+                        {u.amenities.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 mt-2">
+                            {u.amenities.map((a) => (
+                              <span key={a.key}
+                                className="inline-flex items-center gap-1 rounded-full border border-sann-line bg-white px-2 py-0.5 text-[0.68rem] text-sann-text-md">
+                                <span aria-hidden>{a.icon}</span>{lang === "th" ? a.th : a.en}
+                              </span>
+                            ))}
+                          </div>
                         )}
                         <p className="text-[0.72rem] text-sann-text-lt mt-1.5">
                           {/* bed_info already states the sleeping arrangement when
@@ -719,6 +794,11 @@ export default function BookingEngine() {
             </ul>
           </div>
         </div>
+      )}
+
+      {viewer && (
+        <PhotoViewer photos={viewer.photos} start={viewer.start} label={viewer.label}
+          onClose={() => setViewer(null)} />
       )}
     </div>
   );
