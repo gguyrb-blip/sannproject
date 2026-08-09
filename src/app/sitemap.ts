@@ -6,7 +6,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
   const routes: { path: string; priority: number; freq: MetadataRoute.Sitemap[number]["changeFrequency"] }[] = [
     { path: "", priority: 1.0, freq: "weekly" },
-    { path: "/hatyai-private-house-near-lee-garden", priority: 0.95, freq: "weekly" },
+    { path: "/sann-stay-hatyai", priority: 0.95, freq: "weekly" },
+    { path: "/sann-thungsao-hostel", priority: 0.95, freq: "weekly" },
+    { path: "/hatyai-private-house-near-lee-garden", priority: 0.9, freq: "weekly" },
     { path: "/ms/penginapan-hatyai-dekat-lee-garden", priority: 0.95, freq: "weekly" },
     { path: "/book", priority: 0.9, freq: "weekly" },
     { path: "/gallery", priority: 0.7, freq: "monthly" },

@@ -31,17 +31,19 @@ export default function PropertiesSection() {
 
 function Card({ p }: { p: Property }) {
   const soon = p.status === "coming-soon";
-  const houseHref = "/hatyai-private-house-near-lee-garden";
-  const linkable = p.id === "sann-stay-hatyai";
+  // Every open property now has its own page; the Malay article is Hatyai-only.
+  const href = p.pageHref;
+  const linkable = !soon;
+  const isHatyai = p.id === "sann-stay-hatyai";
   return (
     <div className="bg-sann-card rounded-sann-xl overflow-hidden flex flex-col shadow-sann-md">
       <div className="relative aspect-[16/10] overflow-hidden">
         {linkable ? (
-          <Link href={houseHref} className="block w-full h-full group" aria-label={`View ${p.name}`}>
+          <Link href={href} className="block w-full h-full group" aria-label={`View ${p.name}`}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={p.images[0]}
-              alt={`${p.name} — private 4-bedroom house near Lee Garden Plaza, Hat Yai`}
+              alt={p.name}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
             />
           </Link>
@@ -66,7 +68,7 @@ function Card({ p }: { p: Property }) {
         <div>
           <div className="font-display text-3xl leading-tight text-sann-text">
             {linkable ? (
-              <Link href={houseHref} className="hover:text-sann-red transition-colors">
+              <Link href={href} className="hover:text-sann-red transition-colors">
                 {p.name}
               </Link>
             ) : (
@@ -78,7 +80,7 @@ function Card({ p }: { p: Property }) {
 
         <p className="text-sm text-sann-text leading-relaxed m-0">{p.description}</p>
 
-        {linkable && (
+        {isHatyai && (
           <Link
             href="/ms/penginapan-hatyai-dekat-lee-garden"
             className="text-[0.82rem] text-sann-red font-medium underline underline-offset-2 hover:text-sann-red-dk -mt-0.5"
@@ -107,9 +109,14 @@ function Card({ p }: { p: Property }) {
               Join waitlist
             </button>
           ) : (
-            <Link href="/book" className="inline-flex items-center gap-1.5 bg-sann-text hover:bg-sann-red text-white text-sm font-medium px-4 py-2.5 rounded-xl transition-colors">
-              Book now <ArrowR size={14} />
-            </Link>
+            <div className="flex items-center gap-4">
+              <Link href={href} className="text-sm text-sann-text-md hover:text-sann-red border-b border-sann-line pb-px transition-colors">
+                Details
+              </Link>
+              <Link href="/book" className="inline-flex items-center gap-1.5 bg-sann-text hover:bg-sann-red text-white text-sm font-medium px-4 py-2.5 rounded-xl transition-colors">
+                Book now <ArrowR size={14} />
+              </Link>
+            </div>
           )}
         </div>
 

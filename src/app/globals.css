@@ -52,3 +52,12 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     brightness(91%) contrast(94%);
   cursor: pointer;
 }
+
+/* Room photo strips scroll horizontally; the native bar sat across the photos. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

@@ -11,6 +11,8 @@
 export type Property = {
   id: string;
   name: string;
+  /** Dedicated page for this property (see src/lib/property-pages.ts). */
+  pageHref: string;
   tag: "Now Open" | "Opening Soon";
   location: string;
   description: string;
@@ -27,6 +29,7 @@ export const PROPERTIES: Property[] = [
   {
     id: "sann-stay-hatyai",
     name: "Sann Stay Hatyai",
+    pageHref: "/sann-stay-hatyai",
     tag: "Now Open",
     location: "📍 4-min walk to Lee Garden Plaza · Heart of Hat Yai",
     description:
@@ -56,11 +59,12 @@ export const PROPERTIES: Property[] = [
   },
   {
     id: "sann-thung-sao-hostel",
-    name: "Sann Thung Sao Hostel",
+    name: "SANN Thungsao Hostel",
+    pageHref: "/sann-thungsao-hostel",
     tag: "Now Open",
     location: "📍 Near Bus Station & ASEAN Night Bazaar · Hat Yai",
     description:
-      "Comfortable and convenient hostel in the Thung Sao area. Choose between bunkbed dorms (sold per bed, 2 rooms available) or a Family Room with 2 queen beds for up to 4 guests.",
+      "Comfortable and convenient hostel in the Thung Sao area. Take a bed in the 10-bed male dorm — sold per bed, each with a privacy curtain, reading light and a personal locker — or a private Double or Family room with its own bathroom.",
     amenities: [
       "📶 Free WiFi",
       "❄️ Air Con",

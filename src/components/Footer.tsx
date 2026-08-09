@@ -38,8 +38,8 @@ export default function Footer() {
           </div>
 
           <FooterCol title="Properties">
-            <a href="/#properties">Sann Stay Hatyai</a>
-            <a href="/#properties">Sann Thungsao Hostel</a>
+            <Link href="/sann-stay-hatyai">Sann Stay Hatyai</Link>
+            <Link href="/sann-thungsao-hostel">Sann Thungsao Hostel</Link>
           </FooterCol>
           <FooterCol title="Guests">
             <Link href="/book">Book a Stay</Link>

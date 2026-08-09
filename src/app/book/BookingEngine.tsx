@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { PhotoStrip, PhotoViewer } from "@/components/RoomGallery";
 
 // Direct booking engine for sannstay.com. Talks to the PMS on app.sannstay.com:
 //   /api/public/availability  → blocked dates + nightly rates (whole-property only)
@@ -75,45 +76,6 @@ interface Unit {
   availableCount: number;
   maxQty: number;
 }
-// Room photos: a cover thumbnail on the card that opens a full-screen viewer.
-function PhotoViewer({ photos, start, label, onClose }: {
-  photos: string[]; start: number; label: string; onClose: () => void;
-}) {
-  const [i, setI] = useState(start);
-  const go = useCallback((d: number) => setI((v) => (v + d + photos.length) % photos.length), [photos.length]);
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-      if (e.key === "ArrowRight") go(1);
-      if (e.key === "ArrowLeft") go(-1);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [go, onClose]);
-
-  return (
-    <div onClick={onClose} role="dialog" aria-modal="true" aria-label={label}
-      className="fixed inset-0 z-[100] bg-black/90 flex flex-col items-center justify-center p-4">
-      <button type="button" onClick={onClose} aria-label="close"
-        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/15 text-white text-xl leading-none">×</button>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={photos[i]} alt={label} onClick={(e) => e.stopPropagation()}
-        className="max-h-[78vh] max-w-full object-contain rounded-sann-md" />
-      <p className="text-white/80 text-xs mt-3">{label} · {i + 1}/{photos.length}</p>
-      {photos.length > 1 && (
-        <>
-          <button type="button" aria-label="previous"
-            onClick={(e) => { e.stopPropagation(); go(-1); }}
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/15 text-white text-2xl leading-none">‹</button>
-          <button type="button" aria-label="next"
-            onClick={(e) => { e.stopPropagation(); go(1); }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/15 text-white text-2xl leading-none">›</button>
-        </>
-      )}
-    </div>
-  );
-}
-
 interface StayOptions {
   property: { slug: string; name: string; type: string; check_in_time: string | null; check_out_time: string | null };
   nights: number;
@@ -237,6 +199,15 @@ export default function BookingEngine() {
   useEffect(() => {
     const saved = (typeof window !== "undefined" && localStorage.getItem("book_lang")) as Lang | null;
     if (saved === "en" || saved === "th") setLang(saved);
+  }, []);
+
+  // A property page links here as /book?property=thungsao — skip step 1 when it
+  // already knows which stay the guest is looking at. Read from the URL rather
+  // than useSearchParams so the page needs no Suspense boundary.
+  useEffect(() => {
+    const slug = new URLSearchParams(window.location.search).get("property");
+    const match = PROPERTIES.find((p) => p.slug === slug);
+    if (match) { setProperty(match); setStep("dates"); }
   }, []);
   const setLanguage = (l: Lang) => { setLang(l); try { localStorage.setItem("book_lang", l); } catch {} };
 
@@ -544,20 +515,13 @@ export default function BookingEngine() {
                 const n = qty[u.key] ?? 0;
                 const out = u.availableCount < 1;
                 return (
-                  <div key={u.key} className={`border rounded-sann-md p-4 ${out ? "border-sann-line bg-sann-cream/40 opacity-60" : n > 0 ? "border-sann-red bg-sann-red/[0.04]" : "border-sann-red/10"}`}>
+                  <div key={u.key} className={`border rounded-sann-md overflow-hidden ${out ? "border-sann-line bg-sann-cream/40 opacity-60" : n > 0 ? "border-sann-red bg-sann-red/[0.04]" : "border-sann-red/10"}`}>
                     {u.photos.length > 0 && (
-                      <button type="button" onClick={() => setViewer({ photos: u.photos, label: u.label, start: 0 })}
-                        aria-label={`${u.label} — ${tr.viewPhotos}`}
-                        className="relative block w-full mb-3 rounded-sann-md overflow-hidden">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={u.photos[0]} alt={u.label} loading="lazy"
-                          className="w-full h-36 sm:h-44 object-cover" />
-                        <span className="absolute bottom-2 right-2 rounded-full bg-black/55 text-white text-[0.68rem] px-2.5 py-1">
-                          {u.photos.length > 1 ? `📷 ${u.photos.length} · ${tr.viewPhotos}` : `📷 ${tr.viewPhotos}`}
-                        </span>
-                      </button>
+                      <PhotoStrip photos={u.photos} label={u.label} viewLabel={tr.viewPhotos}
+                        className="p-1.5 bg-sann-cream/60 border-b border-sann-line/70"
+                        onOpen={(i) => setViewer({ photos: u.photos, label: u.label, start: i })} />
                     )}
-                    <div className="flex items-start justify-between gap-3 flex-wrap">
+                    <div className="flex items-start justify-between gap-3 flex-wrap p-4">
                       <div className="min-w-[55%]">
                         <p className="font-semibold text-sann-text">{u.label}</p>
                         {u.bedInfo && (
@@ -593,7 +557,7 @@ export default function BookingEngine() {
                       </div>
                     </div>
                     {!out && (
-                      <div className="flex items-center gap-3 mt-3">
+                      <div className="flex items-center gap-3 px-4 pb-4 -mt-1">
                         <button type="button" onClick={() => setQty((q) => ({ ...q, [u.key]: Math.max(0, n - 1) }))}
                           className="w-9 h-9 rounded-sann-md border border-sann-red/15 text-sann-red">−</button>
                         <span className="w-8 text-center font-semibold text-sann-text">{n}</span>
