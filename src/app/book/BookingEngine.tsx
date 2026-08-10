@@ -95,6 +95,12 @@ const T: Record<Lang, Record<string, string>> = {
     booked: "จองแล้ว", pickDatesFirst: "กรุณาเลือกวันบนปฏิทิน",
     soldOut: "เต็มแล้ว", left: "เหลือ", perNight: "/ คืน", stayTotal: "รวมทั้งพัก",
     viewPhotos: "ดูรูป",
+    payNow: "ชำระเงิน",
+    payRedirect: "กำลังพาไปหน้าชำระเงินที่ปลอดภัย…",
+    payPending: "การจองของท่านถูกบันทึกแล้ว แต่ยังไม่ได้ชำระเงิน กดปุ่มด้านล่างเพื่อชำระ",
+    payChecking: "กำลังตรวจสอบการชำระเงิน…",
+    payDone: "ได้รับการชำระเงินเรียบร้อยแล้ว",
+    payNotYet: "ยังไม่พบการชำระเงิน — หากท่านชำระแล้ว กรุณารอสักครู่แล้วรีเฟรชหน้านี้",
     noRooms: "ไม่มีห้องว่างในช่วงวันที่เลือก กรุณาเลือกวันอื่น",
     closedRange: "ช่วงวันนี้ปิดรับเข้าพัก", selectAtLeastOne: "กรุณาเลือกห้องหรือเตียงอย่างน้อย 1 รายการ",
     cleaning: "ค่าทำความสะอาด", total: "รวมทั้งหมด", continue: "ดำเนินการต่อ →", back: "← ย้อนกลับ",
@@ -124,6 +130,12 @@ const T: Record<Lang, Record<string, string>> = {
     booked: "Booked", pickDatesFirst: "Please pick your dates on the calendar",
     soldOut: "Sold out", left: "left", perNight: "/ night", stayTotal: "total stay",
     viewPhotos: "View photos",
+    payNow: "Pay now",
+    payRedirect: "Taking you to our secure payment page…",
+    payPending: "Your reservation is saved but not paid yet. Tap below to pay.",
+    payChecking: "Checking your payment…",
+    payDone: "Payment received",
+    payNotYet: "We haven't seen the payment yet — if you have just paid, wait a moment and refresh this page.",
     noRooms: "No rooms available for those dates — please try different dates.",
     closedRange: "These dates are closed", selectAtLeastOne: "Please select at least one room or bed",
     cleaning: "Cleaning fee", total: "Total", continue: "Continue →", back: "← Back",
@@ -184,6 +196,11 @@ export default function BookingEngine() {
   const [loadingRooms, setLoadingRooms] = useState(false);
   const [qty, setQty] = useState<Record<string, number>>({});
   const [viewer, setViewer] = useState<{ photos: string[]; label: string; start: number } | null>(null);
+  // Beam Checkout. When the gateway is live the guest pays on Beam's hosted page
+  // right after booking, and the transfer-slip fields are not asked for at all.
+  const [gatewayOn, setGatewayOn] = useState(false);
+  const [payUrl, setPayUrl] = useState<string | null>(null);
+  const [returned, setReturned] = useState<{ ref: string; paid: boolean | null } | null>(null);
 
   // guest details
   const [form, setForm] = useState({ guest_name: "", phone_line: "", email: "", message: "" });
@@ -199,6 +216,29 @@ export default function BookingEngine() {
   useEffect(() => {
     const saved = (typeof window !== "undefined" && localStorage.getItem("book_lang")) as Lang | null;
     if (saved === "en" || saved === "th") setLang(saved);
+  }, []);
+
+  useEffect(() => {
+    fetch(`${ADMIN_API}/api/public/pay-link`)
+      .then((r) => r.json()).then((d) => setGatewayOn(!!d?.enabled)).catch(() => {});
+  }, []);
+
+  // Beam sends the guest back as /book?paid=SANN00123. The parameter proves
+  // nothing by itself, so the result comes from asking our server.
+  useEffect(() => {
+    const ref = new URLSearchParams(window.location.search).get("paid");
+    if (!ref) return;
+    setReturned({ ref, paid: null });
+    setStep("done");
+    const check = () =>
+      fetch(`${ADMIN_API}/api/stay/pay-status?ref=${encodeURIComponent(ref)}`)
+        .then((r) => r.json())
+        .then((d) => setReturned({ ref, paid: !!d?.paid }))
+        .catch(() => setReturned({ ref, paid: false }));
+    void check();
+    // The webhook can land a moment after the redirect; one retry covers it.
+    const t = setTimeout(check, 4000);
+    return () => clearTimeout(t);
   }, []);
 
   // A property page links here as /book?property=thungsao — skip step 1 when it
@@ -301,16 +341,22 @@ export default function BookingEngine() {
   async function submit() {
     if (!property || !checkIn || !checkOut) return;
     setError(null);
-    if (!slipFile) return setError(tr.errSlip);
-    if (!transferAmount || !(Number(transferAmount) > 0)) return setError(tr.errAmount);
-    if (!transferTime) return setError(tr.errTime);
+    if (!gatewayOn) {
+      if (!slipFile) return setError(tr.errSlip);
+      if (!transferAmount || !(Number(transferAmount) > 0)) return setError(tr.errAmount);
+      if (!transferTime) return setError(tr.errTime);
+    }
     setSubmitting(true);
     try {
-      const fd = new FormData();
-      fd.append("file", slipFile);
-      const up = await fetch(`${ADMIN_API}/api/public/upload-slip`, { method: "POST", body: fd });
-      const upJ = await up.json().catch(() => ({}));
-      if (!up.ok || !upJ.path) throw new Error(upJ.error || tr.errSlip);
+      let slipPath: string | null = null;
+      if (!gatewayOn && slipFile) {
+        const fd = new FormData();
+        fd.append("file", slipFile);
+        const up = await fetch(`${ADMIN_API}/api/public/upload-slip`, { method: "POST", body: fd });
+        const upJ = await up.json().catch(() => ({}));
+        if (!up.ok || !upJ.path) throw new Error(upJ.error || tr.errSlip);
+        slipPath = upJ.path;
+      }
 
       const res = await fetch("/api/booking-inquiries", {
         method: "POST", headers: { "Content-Type": "application/json" },
@@ -323,9 +369,9 @@ export default function BookingEngine() {
           preferred_unit: picked.map((p) => `${p.unit.label}${p.n > 1 ? ` × ${p.n}` : ""}`).join(" · "),
           guest_name: form.guest_name, phone_line: form.phone_line,
           email: form.email, message: form.message,
-          slip_path: upJ.path,
-          transfer_amount: Number(transferAmount),
-          transfer_time: transferTime.replace("T", " "),
+          slip_path: slipPath,
+          transfer_amount: transferAmount ? Number(transferAmount) : null,
+          transfer_time: transferTime ? transferTime.replace("T", " ") : null,
         }),
       });
       const j = await res.json().catch(() => ({}));
@@ -339,6 +385,18 @@ export default function BookingEngine() {
       });
       setStep("done");
       setTimeout(toTop, 30);
+
+      // Booked — now collect the money on Beam's hosted page. If the link can't
+      // be created the reservation still stands; the done screen offers a retry
+      // rather than losing it.
+      if (gatewayOn) {
+        const refs = j.booking_refs?.length ? j.booking_refs : j.booking_ref ? [j.booking_ref] : [];
+        const pr = await fetch(`${ADMIN_API}/api/public/pay-link`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ booking_refs: refs }),
+        }).then((r) => r.json()).catch(() => null);
+        if (pr?.url) { setPayUrl(pr.url); window.location.href = pr.url; }
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Submission failed");
     } finally { setSubmitting(false); }
@@ -671,7 +729,17 @@ export default function BookingEngine() {
             </div>
           </div>
 
-          {/* PromptPay */}
+          {/* Gateway: nothing to collect here — Beam's hosted page takes card,
+              PromptPay, mobile banking and e-wallets on the next screen. */}
+          {gatewayOn ? (
+            <div className="mt-5 rounded-sann-md border border-sann-red/10 bg-sann-cream/40 p-4 flex items-start gap-3">
+              <span aria-hidden className="text-lg leading-none">🔒</span>
+              <p className="text-[0.8rem] text-sann-text-md leading-relaxed">
+                {tr.payRedirect}
+              </p>
+            </div>
+          ) : (
+          /* PromptPay slip — used only while the gateway is unavailable */
           <div className="mt-5">
             <p className="font-semibold text-sann-text">{tr.payTitle}</p>
             <p className="text-[0.78rem] text-sann-text-md mt-1 leading-relaxed">{tr.payDesc}</p>
@@ -711,6 +779,7 @@ export default function BookingEngine() {
             </div>
             <p className="text-[0.72rem] text-sann-text-lt mt-3">{tr.verifyNote}</p>
           </div>
+          )}
 
           {/* Payment providers require the cancellation terms to be visible
               before the guest pays, not only in the FAQ. */}
@@ -734,7 +803,26 @@ export default function BookingEngine() {
       )}
 
       {/* ══ Done ══ */}
-      {step === "done" && done && (
+      {/* Back from Beam's checkout. The URL says "paid"; the server says whether
+          it really is. */}
+      {step === "done" && returned && (
+        <div className={`${card} p-10 text-center`}>
+          <p className="text-4xl mb-2">{returned.paid === true ? "✅" : returned.paid === null ? "⏳" : "⚠️"}</p>
+          <p className="font-display text-2xl text-sann-red mb-3">
+            {returned.paid === true ? tr.payDone : returned.paid === null ? tr.payChecking : tr.success}
+          </p>
+          <p className="text-[0.7rem] uppercase tracking-wider text-sann-text-lt">{tr.bookingNo}</p>
+          <p className="font-mono font-bold text-lg mb-2 text-sann-text">{returned.ref}</p>
+          {returned.paid === false && (
+            <p className="text-[0.82rem] text-sann-text-md leading-[1.7] mt-2">{tr.payNotYet}</p>
+          )}
+          {returned.paid === true && (
+            <p className="text-sann-text-md leading-[1.7] mt-2">{tr.sentEmail}</p>
+          )}
+        </div>
+      )}
+
+      {step === "done" && done && !returned && (
         <div className={`${card} p-10 text-center`}>
           <p className="text-4xl mb-2">✅</p>
           <p className="font-display text-2xl text-sann-red mb-3">{tr.success}</p>
@@ -748,6 +836,26 @@ export default function BookingEngine() {
           <p className="text-sann-text-md leading-[1.7] mt-2">
             {done.nights} {tr.nights} · {fmt(done.total)}<br />{tr.sentEmail}
           </p>
+          {/* The redirect to Beam didn't happen (popup blocked, or the link
+              could not be created). The reservation is real, so offer the
+              payment rather than stranding it. */}
+          {gatewayOn && (
+            <div className="mt-5 rounded-sann-md border border-sann-red/15 bg-sann-cream/60 p-4">
+              <p className="text-[0.82rem] text-sann-text-md mb-3">{tr.payPending}</p>
+              {payUrl ? (
+                <a href={payUrl} className={btnPrimary}>{tr.payNow}</a>
+              ) : (
+                <button type="button" className={btnPrimary} onClick={async () => {
+                  const pr = await fetch(`${ADMIN_API}/api/public/pay-link`, {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ booking_refs: done.refs }),
+                  }).then((r) => r.json()).catch(() => null);
+                  if (pr?.url) window.location.href = pr.url;
+                  else setError(tr.payNotYet);
+                }}>{tr.payNow}</button>
+              )}
+            </div>
+          )}
           <div className="mt-6 text-left rounded-sann-md border border-sann-line bg-sann-cream/50 p-4">
             <p className="text-[0.7rem] uppercase tracking-[0.12em] font-semibold text-sann-red mb-2">
               {tr.policyTitle}
