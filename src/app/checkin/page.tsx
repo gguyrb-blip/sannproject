@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
-import CheckinForm from "./CheckinForm";
+import CheckinLookup from "./CheckinLookup";
 
 export const metadata: Metadata = {
   title: "Online Check-in",
   description:
-    "Complete your Sann Stay online check-in before arrival to receive self check-in details.",
+    "Check in online for SANN Stay Hatyai or SANN Thungsao Hostel — enter your reservation number to get your self check-in details.",
 };
 
 export default function CheckinPage() {
@@ -24,11 +24,11 @@ export default function CheckinPage() {
           </h1>
           <div className="w-9 h-0.5 bg-sann-red mx-auto my-5 opacity-40" />
           <p className="font-serif italic text-lg text-sann-text-md">
-            Complete this short form so we can send your self check-in details
-            ahead of your arrival.
+            Enter your reservation number and we&apos;ll take you straight to your
+            check-in.
           </p>
         </header>
-        <CheckinForm />
+        <CheckinLookup />
       </main>
       <Footer />
       <WhatsAppFloat />
