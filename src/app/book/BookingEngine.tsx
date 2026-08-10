@@ -6,7 +6,6 @@ import { PhotoStrip, PhotoViewer } from "@/components/RoomGallery";
 // Direct booking engine for sannstay.com. Talks to the PMS on app.sannstay.com:
 //   /api/public/availability  → blocked dates + nightly rates (whole-property only)
 //   /api/public/stay-options  → bookable units + prices for BOTH property types
-//   /api/public/upload-slip   → PromptPay slip storage
 // and creates the booking through this site's /api/booking-inquiries (which
 // forwards to the PMS and archives the lead).
 // Override with NEXT_PUBLIC_ADMIN_API to point local dev at a local PMS.
@@ -107,17 +106,11 @@ const T: Record<Lang, Record<string, string>> = {
     guestName: "ชื่อผู้จอง *", phone: "เบอร์โทร / LINE", email: "อีเมล", message: "ข้อความถึงเรา",
     msgPh: "เวลาถึงโดยประมาณ คำขอพิเศษ ฯลฯ",
     errName: "กรุณากรอกชื่อผู้จอง", errContact: "กรุณากรอกอีเมลหรือเบอร์โทรอย่างน้อย 1 อย่าง",
-    payTitle: "ชำระเงินผ่าน PromptPay",
+    payMethods: "บัตรเครดิต/เดบิต · พร้อมเพย์ · โมบายแบงก์กิ้ง · e-Wallet",
     policyTitle: "นโยบายการยกเลิก",
     policyFree: "ยกเลิกได้ฟรี จนถึง 7 วันก่อนวันเข้าพัก",
     policyCharge: "หากยกเลิกภายใน 7 วันก่อนวันเข้าพัก หรือไม่เข้าพักโดยไม่แจ้งล่วงหน้า (No-show) จะถูกเรียกเก็บเต็มจำนวนของการจอง",
-    payDesc: "สแกน QR ด้วยแอปธนาคาร โอนตามยอดรวม แล้วแนบสลิปพร้อมระบุยอดและเวลาที่โอน",
-    payAccount: "บัญชี: บจก. ซานน์ แอสเซนต์ (SANN ASCENT)",
-    slipLabel: "แนบสลิปการโอนเงิน *", slipPick: "แตะเพื่อเลือกรูปสลิปจากเครื่อง",
-    slipChange: "เปลี่ยนรูปสลิป", amountLabel: "ยอดเงินที่โอน (บาท) *", timeLabel: "วันและเวลาที่โอน *",
-    errSlip: "กรุณาแนบสลิปการโอนเงิน", errAmount: "กรุณาระบุยอดเงินที่โอน", errTime: "กรุณาระบุวันและเวลาที่โอน",
     confirm: "ยืนยันการจอง →", booking: "กำลังจอง…", uploading: "กำลังอัปโหลดสลิป…",
-    verifyNote: "ทีมงานจะตรวจสอบยอดโอนและยืนยันการจองทางอีเมล",
     success: "จองสำเร็จแล้ว!", sentEmail: "เราได้ส่งรายละเอียดทางอีเมลแล้ว ขอบคุณค่ะ 🙏",
     bookingNo: "เลขที่การจอง", errTaken: "ห้องเพิ่งถูกจองไป กรุณาเลือกใหม่", change: "เปลี่ยน",
     viewMap: "ดูแผนที่",
@@ -142,17 +135,11 @@ const T: Record<Lang, Record<string, string>> = {
     guestName: "Full name *", phone: "Phone / LINE", email: "Email", message: "Message",
     msgPh: "Estimated arrival time, special requests, etc.",
     errName: "Please enter your name", errContact: "Please provide an email or phone number",
-    payTitle: "Pay via PromptPay",
+    payMethods: "Card · PromptPay · Mobile banking · e-Wallet",
     policyTitle: "Cancellation Policy",
     policyFree: "The guest can cancel free of charge until 7 days before arrival.",
     policyCharge: "The guest will be charged the total price of the reservation if they cancel in the 7 days before arrival and no show.",
-    payDesc: "Scan the QR with any Thai banking app, pay the total, then attach your slip with the amount and time.",
-    payAccount: "Account: Sann Ascent Co., Ltd. (SANN ASCENT)",
-    slipLabel: "Attach transfer slip *", slipPick: "Tap to choose the slip from your photos",
-    slipChange: "Change slip photo", amountLabel: "Amount transferred (THB) *", timeLabel: "Date & time of transfer *",
-    errSlip: "Please attach your transfer slip", errAmount: "Please enter the transferred amount", errTime: "Please enter the transfer date & time",
     confirm: "Confirm booking →", booking: "Booking…", uploading: "Uploading slip…",
-    verifyNote: "We verify the transfer and confirm your booking by email.",
     success: "Booking confirmed!", sentEmail: "We've sent the details to your email. Thank you! 🙏",
     bookingNo: "Booking number", errTaken: "That room was just taken — please choose again", change: "Change",
     viewMap: "View map",
@@ -206,10 +193,6 @@ export default function BookingEngine() {
   const [form, setForm] = useState({ guest_name: "", phone_line: "", email: "", message: "" });
 
   // payment
-  const [slipFile, setSlipFile] = useState<File | null>(null);
-  const [slipPreview, setSlipPreview] = useState<string | null>(null);
-  const [transferAmount, setTransferAmount] = useState("");
-  const [transferTime, setTransferTime] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState<{ refs: string[]; total: number; nights: number; summary: string | null } | null>(null);
 
@@ -332,31 +315,11 @@ export default function BookingEngine() {
   const cleaningFee = picked.length > 0 ? options?.cleaning_fee ?? 0 : 0;
   const grandTotal = roomsTotal + cleaningFee;
 
-  function pickSlip(f: File | null) {
-    setSlipFile(f);
-    if (slipPreview) URL.revokeObjectURL(slipPreview);
-    setSlipPreview(f ? URL.createObjectURL(f) : null);
-  }
-
   async function submit() {
     if (!property || !checkIn || !checkOut) return;
     setError(null);
-    if (!gatewayOn) {
-      if (!slipFile) return setError(tr.errSlip);
-      if (!transferAmount || !(Number(transferAmount) > 0)) return setError(tr.errAmount);
-      if (!transferTime) return setError(tr.errTime);
-    }
     setSubmitting(true);
     try {
-      let slipPath: string | null = null;
-      if (!gatewayOn && slipFile) {
-        const fd = new FormData();
-        fd.append("file", slipFile);
-        const up = await fetch(`${ADMIN_API}/api/public/upload-slip`, { method: "POST", body: fd });
-        const upJ = await up.json().catch(() => ({}));
-        if (!up.ok || !upJ.path) throw new Error(upJ.error || tr.errSlip);
-        slipPath = upJ.path;
-      }
 
       const res = await fetch("/api/booking-inquiries", {
         method: "POST", headers: { "Content-Type": "application/json" },
@@ -369,9 +332,8 @@ export default function BookingEngine() {
           preferred_unit: picked.map((p) => `${p.unit.label}${p.n > 1 ? ` × ${p.n}` : ""}`).join(" · "),
           guest_name: form.guest_name, phone_line: form.phone_line,
           email: form.email, message: form.message,
-          slip_path: slipPath,
-          transfer_amount: transferAmount ? Number(transferAmount) : null,
-          transfer_time: transferTime ? transferTime.replace("T", " ") : null,
+          // Payment is collected on the gateway, not declared by the guest.
+          slip_path: null,
         }),
       });
       const j = await res.json().catch(() => ({}));
@@ -692,7 +654,6 @@ export default function BookingEngine() {
                 if (!form.guest_name.trim()) return setError(tr.errName);
                 if (!form.email.trim() && !form.phone_line.trim()) return setError(tr.errContact);
                 setError(null);
-                setTransferAmount(String(grandTotal));
                 setStep("review"); setTimeout(toTop, 30);
               }}>
               {tr.continue}
@@ -731,55 +692,13 @@ export default function BookingEngine() {
 
           {/* Gateway: nothing to collect here — Beam's hosted page takes card,
               PromptPay, mobile banking and e-wallets on the next screen. */}
-          {gatewayOn ? (
-            <div className="mt-5 rounded-sann-md border border-sann-red/10 bg-sann-cream/40 p-4 flex items-start gap-3">
-              <span aria-hidden className="text-lg leading-none">🔒</span>
-              <p className="text-[0.8rem] text-sann-text-md leading-relaxed">
-                {tr.payRedirect}
-              </p>
+          <div className="mt-5 rounded-sann-md border border-sann-red/10 bg-sann-cream/40 p-4 flex items-start gap-3">
+            <span aria-hidden className="text-lg leading-none">🔒</span>
+            <div>
+              <p className="text-[0.8rem] text-sann-text-md leading-relaxed">{tr.payRedirect}</p>
+              <p className="text-[0.75rem] text-sann-text-lt mt-1.5">💳 {tr.payMethods}</p>
             </div>
-          ) : (
-          /* PromptPay slip — used only while the gateway is unavailable */
-          <div className="mt-5">
-            <p className="font-semibold text-sann-text">{tr.payTitle}</p>
-            <p className="text-[0.78rem] text-sann-text-md mt-1 leading-relaxed">{tr.payDesc}</p>
-            <div className="flex justify-center my-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/images/payment-qr.jpg" alt="PromptPay QR — SANN ASCENT"
-                className="w-56 max-w-[80%] rounded-sann-md border border-sann-line" />
-            </div>
-            <p className="text-center text-[0.72rem] text-sann-text-lt">{tr.payAccount}</p>
-
-            <div className="mt-4 flex flex-col gap-4">
-              <div>
-                <span className={label}>{tr.slipLabel}</span>
-                <label className={`block border-2 border-dashed rounded-sann-md p-4 text-center cursor-pointer ${slipFile ? "border-sann-success bg-green-50/40" : "border-sann-red/20 bg-sann-cream/50"}`}>
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => pickSlip(e.target.files?.[0] ?? null)} />
-                  {slipPreview ? (
-                    <span className="flex flex-col items-center gap-2">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={slipPreview} alt="slip" className="max-h-40 rounded" />
-                      <span className="text-[0.75rem] text-sann-success font-semibold">{tr.slipChange}</span>
-                    </span>
-                  ) : (
-                    <span className="text-[0.8rem] text-sann-text-md">📎 {tr.slipPick}</span>
-                  )}
-                </label>
-              </div>
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div>
-                  <span className={label}>{tr.amountLabel}</span>
-                  <input className={input} inputMode="decimal" value={transferAmount} onChange={(e) => setTransferAmount(e.target.value)} />
-                </div>
-                <div>
-                  <span className={label}>{tr.timeLabel}</span>
-                  <input className={input} type="datetime-local" value={transferTime} onChange={(e) => setTransferTime(e.target.value)} />
-                </div>
-              </div>
-            </div>
-            <p className="text-[0.72rem] text-sann-text-lt mt-3">{tr.verifyNote}</p>
           </div>
-          )}
 
           {/* Payment providers require the cancellation terms to be visible
               before the guest pays, not only in the FAQ. */}
