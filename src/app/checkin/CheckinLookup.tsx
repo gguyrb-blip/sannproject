@@ -6,7 +6,7 @@
 // does it differently. Once the reservation is verified this page hands over to
 // the right place: Hatyai to its per-booking check-in form (whose link the PMS
 // mints on the spot), Thungsao to the self check-in flow it already uses on site.
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { PROPERTY_PAGES } from "@/lib/property-pages";
 import { CONTACT } from "@/lib/site-data";
@@ -33,6 +33,17 @@ export default function CheckinLookup() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [found, setFound] = useState<Found | null>(null);
+
+  // The confirmation email links here as /checkin?ref=SANN00123 (optionally with
+  // &property=), so the guest only has to confirm the name. The reservation
+  // number alone is guessable, which is exactly why the name is still asked for.
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const r = q.get("ref");
+    if (r) setRef(r);
+    const p = q.get("property");
+    if (p && PROPERTY_PAGES.some((x) => x.apiSlug === p)) setSlug(p);
+  }, []);
 
   const page = PROPERTY_PAGES.find((p) => p.apiSlug === slug) ?? null;
 

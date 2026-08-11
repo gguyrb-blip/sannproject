@@ -95,6 +95,16 @@ const T: Record<Lang, Record<string, string>> = {
     soldOut: "เต็มแล้ว", left: "เหลือ", perNight: "/ คืน", stayTotal: "รวมทั้งพัก",
     viewPhotos: "ดูรูป",
     payNow: "ชำระเงิน",
+    errEmail: "กรุณากรอกอีเมล เพื่อรับอีเมลยืนยันการจองและรายละเอียดการเช็คอิน",
+    errEmailBad: "รูปแบบอีเมลไม่ถูกต้อง",
+    confirmedTitle: "ยืนยันการจองเรียบร้อยแล้ว",
+    confirmedSub: "เราได้ส่งอีเมลยืนยันการจองให้ท่านแล้ว",
+    stayLabel: "วันเข้าพัก", propertyLabel: "ที่พัก", paidLabel: "ยอดที่ชำระ",
+    checkinNowTitle: "วันนี้เป็นวันเช็คอินของท่าน",
+    checkinNowSub: "เช็คอินออนไลน์ตอนนี้เพื่อรับรหัสเข้าที่พักได้เลย",
+    checkinNow: "เช็คอินตอนนี้",
+    checkinLater: "เช็คอินออนไลน์ล่วงหน้า",
+    checkinLaterSub: "ท่านสามารถเช็คอินล่วงหน้าได้ และจะได้รับรหัสเข้าพักในวันเข้าพัก",
     payRedirect: "กำลังพาไปหน้าชำระเงินที่ปลอดภัย…",
     payPending: "การจองของท่านถูกบันทึกแล้ว แต่ยังไม่ได้ชำระเงิน กดปุ่มด้านล่างเพื่อชำระ",
     payChecking: "กำลังตรวจสอบการชำระเงิน…",
@@ -106,7 +116,8 @@ const T: Record<Lang, Record<string, string>> = {
     guestName: "ชื่อผู้จอง *", phone: "เบอร์โทร / LINE", email: "อีเมล", message: "ข้อความถึงเรา",
     msgPh: "เวลาถึงโดยประมาณ คำขอพิเศษ ฯลฯ",
     errName: "กรุณากรอกชื่อผู้จอง", errContact: "กรุณากรอกอีเมลหรือเบอร์โทรอย่างน้อย 1 อย่าง",
-    payMethods: "บัตรเครดิต/เดบิต · พร้อมเพย์ · โมบายแบงก์กิ้ง · e-Wallet",
+    payMethods: "ชำระผ่านช่องทางที่ปลอดภัย",
+    mQr: "พร้อมเพย์", mCard: "บัตรเครดิต/เดบิต", mBank: "โมบายแบงก์กิ้ง", mWallet: "อีวอลเล็ต",
     policyTitle: "นโยบายการยกเลิก",
     policyFree: "ยกเลิกได้ฟรี จนถึง 7 วันก่อนวันเข้าพัก",
     policyCharge: "หากยกเลิกภายใน 7 วันก่อนวันเข้าพัก หรือไม่เข้าพักโดยไม่แจ้งล่วงหน้า (No-show) จะถูกเรียกเก็บเต็มจำนวนของการจอง",
@@ -124,6 +135,16 @@ const T: Record<Lang, Record<string, string>> = {
     soldOut: "Sold out", left: "left", perNight: "/ night", stayTotal: "total stay",
     viewPhotos: "View photos",
     payNow: "Pay now",
+    errEmail: "Please enter your email so we can send your confirmation and check-in details",
+    errEmailBad: "That email address doesn't look right",
+    confirmedTitle: "Your booking is confirmed",
+    confirmedSub: "We've emailed your confirmation.",
+    stayLabel: "Stay", propertyLabel: "Property", paidLabel: "Paid",
+    checkinNowTitle: "Your stay starts today",
+    checkinNowSub: "Check in online now to receive your access codes.",
+    checkinNow: "Check in now",
+    checkinLater: "Check in online",
+    checkinLaterSub: "You can check in ahead of time; your codes appear on arrival day.",
     payRedirect: "Taking you to our secure payment page…",
     payPending: "Your reservation is saved but not paid yet. Tap below to pay.",
     payChecking: "Checking your payment…",
@@ -135,7 +156,8 @@ const T: Record<Lang, Record<string, string>> = {
     guestName: "Full name *", phone: "Phone / LINE", email: "Email", message: "Message",
     msgPh: "Estimated arrival time, special requests, etc.",
     errName: "Please enter your name", errContact: "Please provide an email or phone number",
-    payMethods: "Card · PromptPay · Mobile banking · e-Wallet",
+    payMethods: "Secure payment",
+    mQr: "PromptPay", mCard: "Card", mBank: "Mobile banking", mWallet: "e-Wallet",
     policyTitle: "Cancellation Policy",
     policyFree: "The guest can cancel free of charge until 7 days before arrival.",
     policyCharge: "The guest will be charged the total price of the reservation if they cancel in the 7 days before arrival and no show.",
@@ -186,8 +208,16 @@ export default function BookingEngine() {
   // Beam Checkout. When the gateway is live the guest pays on Beam's hosted page
   // right after booking, and the transfer-slip fields are not asked for at all.
   const [gatewayOn, setGatewayOn] = useState(false);
+  const [payMethods, setPayMethods] = useState<string[]>([]);
   const [payUrl, setPayUrl] = useState<string | null>(null);
-  const [returned, setReturned] = useState<{ ref: string; paid: boolean | null } | null>(null);
+  const [returned, setReturned] = useState<{
+    ref: string; paid: boolean | null;
+    booking?: {
+      ref: string; checkIn: string; checkOut: string; nights: number | null; guests: number | null;
+      total: number; property: string | null; propertySlug: string | null;
+      checkInTime: string; checkOutTime: string; arrivedToday: boolean;
+    } | null;
+  } | null>(null);
 
   // guest details
   const [form, setForm] = useState({ guest_name: "", phone_line: "", email: "", message: "" });
@@ -203,7 +233,9 @@ export default function BookingEngine() {
 
   useEffect(() => {
     fetch(`${ADMIN_API}/api/public/pay-link`)
-      .then((r) => r.json()).then((d) => setGatewayOn(!!d?.enabled)).catch(() => {});
+      .then((r) => r.json())
+      .then((d) => { setGatewayOn(!!d?.enabled); setPayMethods(Array.isArray(d?.methods) ? d.methods : []); })
+      .catch(() => {});
   }, []);
 
   // Beam sends the guest back as /book?paid=SANN00123. The parameter proves
@@ -216,7 +248,7 @@ export default function BookingEngine() {
     const check = () =>
       fetch(`${ADMIN_API}/api/stay/pay-status?ref=${encodeURIComponent(ref)}`)
         .then((r) => r.json())
-        .then((d) => setReturned({ ref, paid: !!d?.paid }))
+        .then((d) => setReturned({ ref, paid: !!d?.paid, booking: d?.booking ?? null }))
         .catch(() => setReturned({ ref, paid: false }));
     void check();
     // The webhook can land a moment after the redirect; one retry covers it.
@@ -638,7 +670,7 @@ export default function BookingEngine() {
                 <input className={input} inputMode="tel" value={form.phone_line} onChange={(e) => setForm({ ...form, phone_line: e.target.value })} />
               </div>
               <div>
-                <span className={label}>{tr.email}</span>
+                <span className={label}>{tr.email} *</span>
                 <input className={input} type="email" inputMode="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
               </div>
             </div>
@@ -652,7 +684,10 @@ export default function BookingEngine() {
             <button type="button" className={btnPrimary}
               onClick={() => {
                 if (!form.guest_name.trim()) return setError(tr.errName);
-                if (!form.email.trim() && !form.phone_line.trim()) return setError(tr.errContact);
+                // Confirmation, payment link and check-in details all travel by
+                // email — without one the guest gets none of them.
+                if (!form.email.trim()) return setError(tr.errEmail);
+                if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email.trim())) return setError(tr.errEmailBad);
                 setError(null);
                 setStep("review"); setTimeout(toTop, 30);
               }}>
@@ -696,7 +731,19 @@ export default function BookingEngine() {
             <span aria-hidden className="text-lg leading-none">🔒</span>
             <div>
               <p className="text-[0.8rem] text-sann-text-md leading-relaxed">{tr.payRedirect}</p>
-              <p className="text-[0.75rem] text-sann-text-lt mt-1.5">💳 {tr.payMethods}</p>
+              {/* Only what this Beam account can actually take — a card promised
+                  here and missing on the checkout page is a broken promise. */}
+              <p className="text-[0.75rem] text-sann-text-lt mt-1.5">
+                {([
+                  ["qrPromptPay", "📱 " + tr.mQr],
+                  ["card", "💳 " + tr.mCard],
+                  ["mobileBanking", "🏦 " + tr.mBank],
+                  ["eWallets", "👛 " + tr.mWallet],
+                ] as [string, string][])
+                  .filter(([k]) => payMethods.includes(k))
+                  .map(([, label]) => label)
+                  .join(" · ") || tr.payMethods}
+              </p>
             </div>
           </div>
 
@@ -725,18 +772,87 @@ export default function BookingEngine() {
       {/* Back from Beam's checkout. The URL says "paid"; the server says whether
           it really is. */}
       {step === "done" && returned && (
-        <div className={`${card} p-10 text-center`}>
-          <p className="text-4xl mb-2">{returned.paid === true ? "✅" : returned.paid === null ? "⏳" : "⚠️"}</p>
-          <p className="font-display text-2xl text-sann-red mb-3">
-            {returned.paid === true ? tr.payDone : returned.paid === null ? tr.payChecking : tr.success}
-          </p>
-          <p className="text-[0.7rem] uppercase tracking-wider text-sann-text-lt">{tr.bookingNo}</p>
-          <p className="font-mono font-bold text-lg mb-2 text-sann-text">{returned.ref}</p>
-          {returned.paid === false && (
-            <p className="text-[0.82rem] text-sann-text-md leading-[1.7] mt-2">{tr.payNotYet}</p>
-          )}
-          {returned.paid === true && (
-            <p className="text-sann-text-md leading-[1.7] mt-2">{tr.sentEmail}</p>
+        <div className={`${card} p-8 lg:p-10`}>
+          {returned.paid === null ? (
+            <div className="text-center">
+              <p className="text-4xl mb-2">⏳</p>
+              <p className="font-display text-2xl text-sann-red">{tr.payChecking}</p>
+            </div>
+          ) : returned.paid ? (
+            <>
+              <div className="text-center">
+                <p className="text-4xl mb-2">✅</p>
+                <p className="font-display text-2xl text-sann-red">{tr.confirmedTitle}</p>
+                <p className="text-[0.85rem] text-sann-text-md mt-1">{tr.confirmedSub}</p>
+              </div>
+
+              <div className="mt-6 rounded-sann-md bg-sann-warm p-4 text-sm text-sann-text-md flex flex-col gap-1.5">
+                <div className="flex justify-between gap-3">
+                  <span className="text-sann-text-lt">{tr.bookingNo}</span>
+                  <span className="font-mono font-bold text-sann-text">{returned.booking?.ref ?? returned.ref}</span>
+                </div>
+                {returned.booking?.property && (
+                  <div className="flex justify-between gap-3">
+                    <span className="text-sann-text-lt">{tr.propertyLabel}</span><span>{returned.booking.property}</span>
+                  </div>
+                )}
+                {returned.booking && (
+                  <div className="flex justify-between gap-3">
+                    <span className="text-sann-text-lt">{tr.stayLabel}</span>
+                    <span>{fmtDate(returned.booking.checkIn, lang)} → {fmtDate(returned.booking.checkOut, lang)}</span>
+                  </div>
+                )}
+                {returned.booking && (
+                  <div className="flex justify-between gap-3">
+                    <span className="text-sann-text-lt">{tr.checkIn} / {tr.checkOut}</span>
+                    <span>{returned.booking.checkInTime} / {returned.booking.checkOutTime}</span>
+                  </div>
+                )}
+                {returned.booking?.total ? (
+                  <div className="flex justify-between gap-3 pt-2 mt-1 border-t border-sann-red/10">
+                    <span className="font-semibold text-sann-text">{tr.paidLabel}</span>
+                    <span className="font-display text-xl text-sann-red">{fmt(returned.booking.total)}</span>
+                  </div>
+                ) : null}
+              </div>
+
+              {/* Arrival day → the guest can finish check-in right now; the
+                  reservation number is carried over so nothing is retyped. */}
+              <div className="mt-6 rounded-sann-md border border-sann-red/15 bg-sann-cream/60 p-5 text-center">
+                <p className="font-semibold text-sann-text">
+                  {returned.booking?.arrivedToday ? tr.checkinNowTitle : tr.checkinLater}
+                </p>
+                <p className="text-[0.8rem] text-sann-text-md mt-1 mb-4">
+                  {returned.booking?.arrivedToday ? tr.checkinNowSub : tr.checkinLaterSub}
+                </p>
+                <a
+                  href={
+                    returned.booking?.arrivedToday && returned.booking?.propertySlug === "thungsao"
+                      ? `${ADMIN_API}/stay?ref=${encodeURIComponent(returned.booking.ref)}`
+                      : `/checkin?ref=${encodeURIComponent(returned.booking?.ref ?? returned.ref)}${returned.booking?.propertySlug ? `&property=${returned.booking.propertySlug}` : ""}`
+                  }
+                  className={btnPrimary}
+                >
+                  {returned.booking?.arrivedToday ? tr.checkinNow : tr.checkinLater}
+                </a>
+              </div>
+
+              <div className="mt-6 text-left rounded-sann-md border border-sann-line bg-sann-cream/50 p-4">
+                <p className="text-[0.7rem] uppercase tracking-[0.12em] font-semibold text-sann-red mb-2">{tr.policyTitle}</p>
+                <ul className="text-[0.78rem] text-sann-text-md leading-[1.7] list-disc pl-4 space-y-1">
+                  <li>{tr.policyFree}</li>
+                  <li>{tr.policyCharge}</li>
+                </ul>
+              </div>
+            </>
+          ) : (
+            <div className="text-center">
+              <p className="text-4xl mb-2">⚠️</p>
+              <p className="font-display text-2xl text-sann-red">{tr.success}</p>
+              <p className="text-[0.7rem] uppercase tracking-wider text-sann-text-lt mt-4">{tr.bookingNo}</p>
+              <p className="font-mono font-bold text-lg text-sann-text">{returned.ref}</p>
+              <p className="text-[0.82rem] text-sann-text-md leading-[1.7] mt-3">{tr.payNotYet}</p>
+            </div>
           )}
         </div>
       )}
