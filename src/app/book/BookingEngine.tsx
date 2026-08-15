@@ -97,6 +97,8 @@ const T: Record<Lang, Record<string, string>> = {
     payNow: "ชำระเงิน",
     errEmail: "กรุณากรอกอีเมล เพื่อรับอีเมลยืนยันการจองและรายละเอียดการเช็คอิน",
     errEmailBad: "รูปแบบอีเมลไม่ถูกต้อง",
+    errPhone: "กรุณากรอกหมายเลขโทรศัพท์ เพื่อให้ทางที่พักติดต่อท่านได้",
+    errPhoneBad: "หมายเลขโทรศัพท์สั้นเกินไป",
     confirmedTitle: "ยืนยันการจองเรียบร้อยแล้ว",
     confirmedSub: "เราได้ส่งอีเมลยืนยันการจองให้ท่านแล้ว",
     stayLabel: "วันเข้าพัก", propertyLabel: "ที่พัก", paidLabel: "ยอดที่ชำระ",
@@ -137,6 +139,8 @@ const T: Record<Lang, Record<string, string>> = {
     payNow: "Pay now",
     errEmail: "Please enter your email so we can send your confirmation and check-in details",
     errEmailBad: "That email address doesn't look right",
+    errPhone: "Please enter a phone number so we can reach you",
+    errPhoneBad: "That phone number looks too short",
     confirmedTitle: "Your booking is confirmed",
     confirmedSub: "We've emailed your confirmation.",
     stayLabel: "Stay", propertyLabel: "Property", paidLabel: "Paid",
@@ -666,7 +670,7 @@ export default function BookingEngine() {
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <span className={label}>{tr.phone}</span>
+                <span className={label}>{tr.phone} *</span>
                 <input className={input} inputMode="tel" value={form.phone_line} onChange={(e) => setForm({ ...form, phone_line: e.target.value })} />
               </div>
               <div>
@@ -688,6 +692,11 @@ export default function BookingEngine() {
                 // email — without one the guest gets none of them.
                 if (!form.email.trim()) return setError(tr.errEmail);
                 if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email.trim())) return setError(tr.errEmailBad);
+                // The property calls the guest about arrival time, late arrivals
+                // and anything that goes wrong at the door — an email alone is
+                // no use at 23:00.
+                if (!form.phone_line.trim()) return setError(tr.errPhone);
+                if (form.phone_line.replace(/\D/g, "").length < 8) return setError(tr.errPhoneBad);
                 setError(null);
                 setStep("review"); setTimeout(toTop, 30);
               }}>
