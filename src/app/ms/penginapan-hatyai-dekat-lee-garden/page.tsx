@@ -10,7 +10,7 @@ const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://sannstay.com";
 const PATH = "/ms/penginapan-hatyai-dekat-lee-garden";
 const EN_PATH = "/hatyai-private-house-near-lee-garden";
 const URL = `${SITE}${PATH}`;
-const WHATSAPP = "https://wa.me/66629455541";
+const WHATSAPP = "https://wa.me/66656346834";
 const abs = (p: string) => (p.startsWith("http") ? p : `${SITE}${p}`);
 
 const TITLE = "Penginapan Hatyai Dekat Lee Garden untuk Family | SANN Stay Hatyai";
@@ -169,7 +169,7 @@ export default function PenginapanHatyaiPage() {
     description: DESC,
     url: URL,
     image: [abs("/images/hero.jpg"), abs("/images/exterior-2.jpg"), abs("/images/hatyai/1.jpg")],
-    telephone: "+66629455541",
+    telephone: "+66656346834",
     email: CONTACT.email,
     priceRange: "฿฿",
     currenciesAccepted: "THB",

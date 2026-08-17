@@ -81,7 +81,7 @@ export default function PrivacyPage() {
             <p>
               บริษัท ซานน์ แอสเซนต์ จำกัด<br />
               1034/141 หมู่ที่ 3 ถนนเลี่ยงเมือง (สายเอเชีย) ตำบลควนลัง อำเภอหาดใหญ่ จังหวัดสงขลา 90110<br />
-              อีเมล: sannascent.co@gmail.com · WhatsApp: +66 62 945 5541
+              อีเมล: sannascent.co@gmail.com · WhatsApp: +66 65 634 6834
             </p>
 
             {/* ════════ ENGLISH ════════ */}
@@ -139,7 +139,7 @@ export default function PrivacyPage() {
               <p>
                 Sann Ascent Co., Ltd.<br />
                 1034/141 Moo 3, Liang Mueang Road (Asia Highway), Khuan Lang, Hat Yai District, Songkhla 90110, Thailand<br />
-                Email: sannascent.co@gmail.com · WhatsApp: +66 62 945 5541
+                Email: sannascent.co@gmail.com · WhatsApp: +66 65 634 6834
               </p>
             </div>
           </article>

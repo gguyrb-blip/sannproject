@@ -46,7 +46,7 @@ function ArrowIcon() {
 }
 
 const LINKS = [
-  { title: "WhatsApp", sub: "+66 62 945 5541", href: "https://wa.me/66629455541", tint: "rgba(37,211,102,0.12)", icon: <WhatsAppIcon /> },
+  { title: "WhatsApp", sub: "+66 65 634 6834", href: "https://wa.me/66656346834", tint: "rgba(37,211,102,0.12)", icon: <WhatsAppIcon /> },
   { title: "Instagram", sub: "@sannstay.hatyai", href: "https://www.instagram.com/sannstay.hatyai/", tint: "rgba(225,48,108,0.10)", icon: <InstagramIcon /> },
   { title: "Facebook", sub: "SANN Stay", href: "https://www.facebook.com/people/sann-stay/61565234153610/", tint: "rgba(24,119,242,0.10)", icon: <FacebookIcon /> },
   { title: "TikTok", sub: "@sannastayhatyai", href: "https://www.tiktok.com/@sannastayhatyai", tint: "rgba(0,0,0,0.06)", icon: <TikTokIcon /> },

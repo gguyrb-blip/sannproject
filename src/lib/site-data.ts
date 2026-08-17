@@ -214,14 +214,14 @@ export const FAQS = [
 // Both add-friend and chat links use the standard line.me URL with the
 // %40 (URL-encoded "@") prefix so it works on iOS / Android / desktop.
 // WhatsApp: wa.me wants the number in full international form with no "+",
-// no spaces and no leading zero — +66 62 945 5541 → 66629455541.
+// no spaces and no leading zero — +66 65 634 6834 → 66656346834.
 export const CONTACT = {
   email: "sannascent.co@gmail.com",
   lineUrl: "https://line.me/R/ti/p/%40245qdfzu",
   lineChatUrl: "https://line.me/R/ti/p/%40245qdfzu",
   lineHandle: "@245qdfzu",
-  whatsappNumber: "+66 62 945 5541",
-  whatsappUrl: "https://wa.me/66629455541",
+  whatsappNumber: "+66 65 634 6834",
+  whatsappUrl: "https://wa.me/66656346834",
 };
 
 // Sann Stay Hatyai — 7.006212325779094, 100.47327252883606

@@ -18,7 +18,7 @@ export default function StructuredData() {
     description: h.description,
     url: SITE,
     image: [abs(HERO_IMAGE), abs("/images/exterior-2.jpg"), abs("/images/hatyai/1.jpg")],
-    telephone: "+66629455541",
+    telephone: "+66656346834",
     email: CONTACT.email,
     priceRange: "฿฿",
     currenciesAccepted: "THB",
