@@ -16,7 +16,7 @@ const todayISO = () => ymd(new Date());
 const fmt = (n: number) => "฿" + n.toLocaleString("en-US", { maximumFractionDigits: 0 });
 
 type Lang = "th" | "en";
-type Step = "property" | "dates" | "rooms" | "details" | "review" | "done";
+type Step = "property" | "dates" | "rooms" | "details" | "review" | "pay" | "done";
 
 interface PropertyOption {
   slug: string;
@@ -109,6 +109,10 @@ const T: Record<Lang, Record<string, string>> = {
     checkinLaterSub: "ท่านสามารถเช็คอินล่วงหน้าได้ และจะได้รับรหัสเข้าพักในวันเข้าพัก",
     payRedirect: "กำลังพาไปหน้าชำระเงินที่ปลอดภัย…",
     payPending: "การจองของท่านถูกบันทึกแล้ว แต่ยังไม่ได้ชำระเงิน กดปุ่มด้านล่างเพื่อชำระ",
+    payHeld: "เราถือห้องไว้ให้ท่านแล้ว ชำระเงินเพื่อยืนยันการจอง",
+    payWays: "บัตรเครดิต/เดบิต · พร้อมเพย์ · โมบายแบงก์กิ้ง · อีวอลเล็ต",
+    payOpen: "เปิดหน้าชำระเงิน",
+    payStuck: "หากหน้าชำระเงินไม่เปิดขึ้นเอง กดปุ่มด้านล่างได้เลย",
     payChecking: "กำลังตรวจสอบการชำระเงิน…",
     payDone: "ได้รับการชำระเงินเรียบร้อยแล้ว",
     payNotYet: "ยังไม่พบการชำระเงิน — หากท่านชำระแล้ว กรุณารอสักครู่แล้วรีเฟรชหน้านี้",
@@ -151,6 +155,10 @@ const T: Record<Lang, Record<string, string>> = {
     checkinLaterSub: "You can check in ahead of time; your codes appear on arrival day.",
     payRedirect: "Taking you to our secure payment page…",
     payPending: "Your reservation is saved but not paid yet. Tap below to pay.",
+    payHeld: "Your rooms are held. Pay now to confirm the booking.",
+    payWays: "Cards · PromptPay · Mobile banking · e-Wallets",
+    payOpen: "Open the payment page",
+    payStuck: "If the payment page doesn't open by itself, tap below.",
     payChecking: "Checking your payment…",
     payDone: "Payment received",
     payNotYet: "We haven't seen the payment yet — if you have just paid, wait a moment and refresh this page.",
@@ -375,26 +383,30 @@ export default function BookingEngine() {
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j.error || "Submission failed");
       if (j.unavailable) throw new Error(tr.errTaken);
+      const refs = j.booking_refs?.length ? j.booking_refs : j.booking_ref ? [j.booking_ref] : [];
       setDone({
-        refs: j.booking_refs?.length ? j.booking_refs : j.booking_ref ? [j.booking_ref] : [],
+        refs,
         total: j.total_amount ?? grandTotal,
         nights: options?.nights ?? 0,
         summary: j.unit_summary ?? null,
       });
-      setStep("done");
-      setTimeout(toTop, 30);
 
-      // Booked — now collect the money on Beam's hosted page. If the link can't
-      // be created the reservation still stands; the done screen offers a retry
-      // rather than losing it.
-      if (gatewayOn) {
-        const refs = j.booking_refs?.length ? j.booking_refs : j.booking_ref ? [j.booking_ref] : [];
-        const pr = await fetch(`${ADMIN_API}/api/public/pay-link`, {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ booking_refs: refs }),
-        }).then((r) => r.json()).catch(() => null);
-        if (pr?.url) { setPayUrl(pr.url); window.location.href = pr.url; }
-      }
+      // The rooms are held, not sold. Showing "Booking confirmed!" here and
+      // redirecting a moment later told the guest they were finished when the
+      // money had not moved — so the payment step comes first, the way the
+      // hostel's walk-in flow does it, and the confirmation waits until Beam
+      // sends them back.
+      if (!gatewayOn) { setStep("done"); setTimeout(toTop, 30); return; }
+
+      setStep("pay");
+      setTimeout(toTop, 30);
+      const pr = await fetch(`${ADMIN_API}/api/public/pay-link`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ booking_refs: refs }),
+      }).then((r) => r.json()).catch(() => null);
+      // A link that cannot be created must not strand the reservation: the pay
+      // step keeps its own button so the guest can try again.
+      if (pr?.url) { setPayUrl(pr.url); window.location.href = pr.url; }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Submission failed");
     } finally { setSubmitting(false); }
@@ -863,6 +875,40 @@ export default function BookingEngine() {
               <p className="text-[0.82rem] text-sann-text-md leading-[1.7] mt-3">{tr.payNotYet}</p>
             </div>
           )}
+        </div>
+      )}
+
+      {step === "pay" && done && (
+        <div className={`${card} p-10 text-center`}>
+          <p className="font-display text-2xl text-sann-red mb-2">{tr.payRedirect}</p>
+          <p className="text-sann-text-md leading-[1.7]">{tr.payHeld}</p>
+
+          {done.refs.length > 0 && (
+            <>
+              <p className="text-[0.7rem] uppercase tracking-wider text-sann-text-lt mt-5">{tr.bookingNo}</p>
+              <p className="font-mono font-bold text-lg text-sann-text">{done.refs.join(" · ")}</p>
+            </>
+          )}
+          <p className="font-mono text-3xl font-semibold text-sann-text mt-3">{fmt(done.total)}</p>
+          {done.summary && <p className="text-sm text-sann-text-md mt-1">{done.summary}</p>}
+          <p className="text-[0.78rem] text-sann-text-lt mt-3">{tr.payWays}</p>
+
+          <div className="mt-6">
+            {payUrl ? (
+              <a href={payUrl} className={btnPrimary}>{tr.payOpen}</a>
+            ) : (
+              <button type="button" className={btnPrimary} onClick={async () => {
+                setError(null);
+                const pr = await fetch(`${ADMIN_API}/api/public/pay-link`, {
+                  method: "POST", headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ booking_refs: done.refs }),
+                }).then((r) => r.json()).catch(() => null);
+                if (pr?.url) { setPayUrl(pr.url); window.location.href = pr.url; }
+                else setError(tr.payNotYet);
+              }}>{tr.payOpen}</button>
+            )}
+            <p className="text-[0.78rem] text-sann-text-lt mt-3">{tr.payStuck}</p>
+          </div>
         </div>
       )}
 
