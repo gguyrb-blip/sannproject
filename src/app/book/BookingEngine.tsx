@@ -127,7 +127,7 @@ const T: Record<Lang, Record<string, string>> = {
     policyTitle: "นโยบายการยกเลิก",
     policyFree: "ยกเลิกได้ฟรี จนถึง 7 วันก่อนวันเข้าพัก",
     policyCharge: "หากยกเลิกภายใน 7 วันก่อนวันเข้าพัก หรือไม่เข้าพักโดยไม่แจ้งล่วงหน้า (No-show) จะถูกเรียกเก็บเต็มจำนวนของการจอง",
-    confirm: "ยืนยันการจอง →", booking: "กำลังจอง…", uploading: "กำลังอัปโหลดสลิป…",
+    confirm: "ชำระเงิน", booking: "กำลังไปหน้าชำระเงิน…", uploading: "กำลังอัปโหลดสลิป…",
     success: "จองสำเร็จแล้ว!", sentEmail: "เราได้ส่งรายละเอียดทางอีเมลแล้ว ขอบคุณค่ะ 🙏",
     bookingNo: "เลขที่การจอง", errTaken: "ห้องเพิ่งถูกจองไป กรุณาเลือกใหม่", change: "เปลี่ยน",
     viewMap: "ดูแผนที่",
@@ -173,7 +173,7 @@ const T: Record<Lang, Record<string, string>> = {
     policyTitle: "Cancellation Policy",
     policyFree: "The guest can cancel free of charge until 7 days before arrival.",
     policyCharge: "The guest will be charged the total price of the reservation if they cancel in the 7 days before arrival and no show.",
-    confirm: "Confirm booking →", booking: "Booking…", uploading: "Uploading slip…",
+    confirm: "Pay", booking: "Taking you to payment…", uploading: "Uploading slip…",
     success: "Booking confirmed!", sentEmail: "We've sent the details to your email. Thank you! 🙏",
     bookingNo: "Booking number", errTaken: "That room was just taken — please choose again", change: "Change",
     viewMap: "View map",
@@ -746,27 +746,9 @@ export default function BookingEngine() {
             </div>
           </div>
 
-          {/* Gateway: nothing to collect here — Beam's hosted page takes card,
-              PromptPay, mobile banking and e-wallets on the next screen. */}
-          <div className="mt-5 rounded-sann-md border border-sann-red/10 bg-sann-cream/40 p-4 flex items-start gap-3">
-            <span aria-hidden className="text-lg leading-none">🔒</span>
-            <div>
-              <p className="text-[0.8rem] text-sann-text-md leading-relaxed">{tr.payRedirect}</p>
-              {/* Only what this Beam account can actually take — a card promised
-                  here and missing on the checkout page is a broken promise. */}
-              <p className="text-[0.75rem] text-sann-text-lt mt-1.5">
-                {([
-                  ["qrPromptPay", "📱 " + tr.mQr],
-                  ["card", "💳 " + tr.mCard],
-                  ["mobileBanking", "🏦 " + tr.mBank],
-                  ["eWallets", "👛 " + tr.mWallet],
-                ] as [string, string][])
-                  .filter(([k]) => payMethods.includes(k))
-                  .map(([, label]) => label)
-                  .join(" · ") || tr.payMethods}
-              </p>
-            </div>
-          </div>
+          {/* No payment notice here: pressing Confirm goes straight to Beam,
+              whose own page shows the methods it accepts. Listing them twice
+              only risks the two disagreeing. */}
 
           {/* Payment providers require the cancellation terms to be visible
               before the guest pays, not only in the FAQ. */}
@@ -783,7 +765,7 @@ export default function BookingEngine() {
           <div className="flex items-center justify-between mt-6">
             <button type="button" className={btnGhost} disabled={submitting} onClick={() => setStep("details")}>{tr.back}</button>
             <button type="button" className={btnPrimary} disabled={submitting} onClick={submit}>
-              {submitting ? tr.booking : tr.confirm}
+              {submitting ? tr.booking : `${tr.confirm} ${fmt(grandTotal)} →`}
             </button>
           </div>
         </div>
