@@ -183,10 +183,7 @@ export default function VoucherFlow({ onClose }: { onClose: () => void }) {
             void pay();
           }}
           disabled={(step === 2 && !detailsOk) || busy}
-          className="mx-auto block w-full max-w-[428px] rounded-sann-md px-4 py-4 text-base
-            font-semibold shadow-sann-md transition-colors
-            disabled:cursor-default disabled:bg-sann-beige disabled:text-sann-muted
-            disabled:shadow-none bg-sann-red text-white hover:bg-sann-red-dk"
+          className="mx-auto block w-full max-w-[428px] text-center bg-sann-red hover:bg-sann-red-dk text-white text-base font-medium px-6 py-4 rounded-2xl shadow-sann-md transition-colors disabled:cursor-default disabled:bg-sann-beige disabled:text-sann-muted disabled:shadow-none"
         >
           {busy ? "กำลังสร้าง QR…"
             : step === 1 ? "ถัดไป →"

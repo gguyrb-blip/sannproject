@@ -86,8 +86,7 @@ export default function Sale() {
 
         <Card>
           <button onClick={() => setBuying(true)}
-            className="w-full rounded-sann-md bg-sann-red px-4 py-4 text-base font-semibold
-              text-white shadow-sann-md transition-colors hover:bg-sann-red-dk">
+            className="w-full justify-center bg-sann-red hover:bg-sann-red-dk text-white text-base font-medium px-6 py-4 rounded-2xl shadow-sann-md transition-colors">
             ซื้อ Voucher — ฿299
           </button>
           <div className="mt-2.5 flex items-center justify-center gap-1.5 text-[12.5px] text-sann-muted">
@@ -153,9 +152,7 @@ export default function Sale() {
             </p>
           )}
           <button onClick={useVoucher} disabled={code.replace(/-/g, "").length !== 10 || busy}
-            className="mt-3.5 w-full rounded-sann-md bg-sann-red px-4 py-4 text-base font-semibold
-              text-white shadow-sann-md transition-colors hover:bg-sann-red-dk
-              disabled:cursor-default disabled:bg-sann-beige disabled:text-sann-muted disabled:shadow-none">
+            className="mt-3.5 w-full justify-center bg-sann-red hover:bg-sann-red-dk text-white text-base font-medium px-6 py-4 rounded-2xl shadow-sann-md transition-colors disabled:cursor-default disabled:bg-sann-beige disabled:text-sann-muted disabled:shadow-none">
             {busy ? "กำลังตรวจสอบ…" : code.replace(/-/g, "").length !== 10 ? "กรอกรหัสให้ครบก่อน" : "ใช้ Voucher นี้"}
           </button>
           <p className="mt-2.5 text-center text-[12.5px] text-sann-muted">
