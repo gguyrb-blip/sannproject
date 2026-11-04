@@ -46,9 +46,13 @@ export default function Sale() {
 
   return (
     <>
-      <div className="mx-auto max-w-[460px] px-4 pb-20">
+      <div className="px-6 pb-20 lg:px-20">
         {/* ── the offer ── */}
-        <section className="pb-1 pt-3.5 text-center">
+        {/* The offer, centred. On a phone it is the page; on a desktop it
+           is the top of one, so it gets a wider measure and the two columns
+           below it rather than a 460px strip down the middle of a 2,000px
+           screen. */}
+        <section className="mx-auto max-w-2xl pb-1 pt-3.5 text-center">
           <div className="mb-2.5 text-[10.5px] font-bold uppercase tracking-[0.3em] text-sann-red">
             Thungsao Hostel · ทุ่งเสา หาดใหญ่
           </div>
@@ -74,6 +78,11 @@ export default function Sale() {
           </span>
         </section>
 
+        {/* Two columns from lg up: what it is and how to buy on the left,
+           the reading matter on the right. One column below that, in the
+           same order, so the phone layout is unchanged. */}
+        <div className="mx-auto mt-6 grid max-w-5xl items-start gap-6 lg:grid-cols-[1fr_1fr] lg:gap-10">
+        <div className="mx-auto w-full max-w-[460px] lg:mx-0 lg:sticky lg:top-24">
         <Card>
           <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-sann-muted">
             1 Voucher = 1 เตียง 1 คืน
@@ -98,7 +107,9 @@ export default function Sale() {
             ซื้อไว้แล้ว? ใช้ Voucher ที่นี่
           </a>
         </Card>
+        </div>
 
+        <div className="mx-auto w-full max-w-[460px] lg:mx-0">
         <Card>
           <h2 className="mb-2.5 font-display text-[21px]">เงื่อนไข</h2>
           <ul className="text-[13.5px]">
@@ -159,6 +170,8 @@ export default function Sale() {
             หาอีเมลไม่เจอ? ทักไลน์ <b className="text-sann-text">@sannstay</b> พร้อมเบอร์ที่ใช้ซื้อ
           </p>
         </div>
+        </div>
+        </div>
       </div>
 
       {buying && <VoucherFlow onClose={() => setBuying(false)} />}
@@ -168,7 +181,7 @@ export default function Sale() {
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mt-3.5 rounded-sann-lg border border-sann-line bg-white p-[18px] shadow-sann-sm">
+    <div className="mt-3.5 rounded-sann-lg border border-sann-line bg-white p-[18px] shadow-sann-sm first:mt-0">
       {children}
     </div>
   );
