@@ -1,6 +1,7 @@
 import StructuredData from "@/components/StructuredData";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
+import PromoStrip from "@/components/PromoStrip";
 import PropertiesSection from "@/components/PropertiesSection";
 import AboutSection from "@/components/AboutSection";
 import GalleryStrip from "@/components/GalleryStrip";
@@ -18,6 +19,7 @@ export default function HomePage() {
       <StructuredData />
       <Header />
       <main>
+        <PromoStrip />
         <Hero />
         <PropertiesSection />
         <AboutSection />
