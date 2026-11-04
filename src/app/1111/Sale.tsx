@@ -7,7 +7,8 @@
 // voucher could only be opened from the link in its confirmation email — fine
 // until someone deletes it, buys one as a gift, or comes back in February, at
 // which point the only route left was phoning the hostel.
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Image from "next/image";
 import VoucherFlow from "./VoucherFlow";
 
 const ADMIN_API = process.env.NEXT_PUBLIC_ADMIN_API || "https://app.sannstay.com";
@@ -20,11 +21,54 @@ function tidyCode(raw: string) {
        : s;
 }
 
+type Campaign = {
+  open: boolean; reason: string | null;
+  today: string; opensOn: string; closesOn: string;
+};
+
+/** 2026-11-10 → "10 พ.ย." */
+const thDay = (d: string) => {
+  const M = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+  const [, m, day] = d.split("-").map(Number);
+  return `${day} ${M[m - 1]}`;
+};
+const daysBetween = (a: string, b: string) =>
+  Math.round((Date.parse(b + "T00:00:00Z") - Date.parse(a + "T00:00:00Z")) / 86400000);
+
 export default function Sale() {
   const [buying, setBuying] = useState(false);
+  const [camp, setCamp] = useState<Campaign | null>(null);
+  const [photos, setPhotos] = useState<string[]>([]);
   const [code, setCode] = useState("");
   const [msg, setMsg] = useState<{ bad: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
+
+  // The campaign window decides what the button says, and the server decides
+  // the window — a seven-day sale run off the visitor's own clock would open
+  // early for anyone whose phone is a day fast.
+  useEffect(() => {
+    fetch(`${ADMIN_API}/api/public/voucher`)
+      .then(r => r.json())
+      .then((d: Partial<Campaign>) => {
+        // This site and the PMS deploy separately, so the API answering here
+        // may be a version behind — today/opensOn/closesOn were added after
+        // this page shipped. Taking them on trust crashed the whole page on
+        // the first render that got the older shape. Without them the page
+        // simply shows no dates and the server still refuses an early sale.
+        if (d && d.today && d.opensOn && d.closesOn) setCamp(d as Campaign);
+      })
+      .catch(() => {});
+    // The room's real photographs, the same ones the property page shows.
+    // Selling a bed to someone who has never seen the room is the one thing
+    // this page was doing that no other page here does.
+    fetch(`${ADMIN_API}/api/public/rooms?property_slug=thungsao`)
+      .then(r => r.json())
+      .then(d => {
+        const dorm = (d.units ?? []).find((u: { kind?: string }) => u.kind === "dorm");
+        setPhotos((dorm?.photos ?? []).slice(0, 3));
+      })
+      .catch(() => {});
+  }, []);
 
   async function useVoucher() {
     const clean = code.replace(/-/g, "");
@@ -76,7 +120,47 @@ export default function Sale() {
             text-xs font-bold text-sann-red-dk">
             ประหยัด ฿51 ต่อเตียง · 15%
           </span>
+
+          {/* When it is on sale. A 11.11 promotion with no dates gives nobody
+              a reason to buy today — and before the 10th the honest thing is
+              to say so rather than show a button that will refuse. */}
+          {camp && (
+            <div className="mt-5 inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-1
+              rounded-full border border-sann-line bg-white px-4 py-2 text-[13px]">
+              {camp.reason === "not_started" ? (
+                <>
+                  <b className="font-semibold text-sann-red">เปิดขาย {thDay(camp.opensOn)}</b>
+                  <span className="text-sann-muted">
+                    · อีก {daysBetween(camp.today, camp.opensOn)} วัน · ขาย 7 วันเท่านั้น
+                  </span>
+                </>
+              ) : camp.reason === "sales_closed" ? (
+                <b className="font-semibold text-sann-muted">ปิดการขายแล้วเมื่อ {thDay(camp.closesOn)}</b>
+              ) : (
+                <>
+                  <b className="font-semibold text-sann-red">
+                    เหลืออีก {Math.max(0, daysBetween(camp.today, camp.closesOn)) + 1} วัน
+                  </b>
+                  <span className="text-sann-muted">· ขายถึง {thDay(camp.closesOn)} เท่านั้น</span>
+                </>
+              )}
+            </div>
+          )}
         </section>
+
+        {/* The room, photographed. */}
+        {photos.length > 0 && (
+          <div className="mx-auto mt-7 grid max-w-5xl grid-cols-2 gap-2 sm:grid-cols-3">
+            {photos.map((src, i) => (
+              <div key={src}
+                className={`relative overflow-hidden rounded-sann-md bg-sann-beige
+                  ${i === 0 ? "col-span-2 aspect-[16/10] sm:col-span-1 sm:aspect-[4/3]" : "aspect-[4/3]"}`}>
+                <Image src={src} alt="ห้องดอร์มชาย SANN Thungsao Hostel" fill sizes="(max-width: 640px) 50vw, 320px"
+                  className="object-cover" unoptimized />
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Two columns from lg up: what it is and how to buy on the left,
            the reading matter on the right. One column below that, in the
@@ -93,10 +177,42 @@ export default function Sale() {
           <Spec icon="📍" th="ทุ่งเสา หาดใหญ่ · ใกล้สถานีขนส่ง" en="Thung Sao, Hat Yai — near the bus terminal" last />
         </Card>
 
+        {/* What happens after the money leaves. Nobody should have to read
+            the terms to find out that the code arrives by email and the date
+            is chosen later — that IS the offer, and it was buried in the FAQ
+            below the button that asks for ฿299. */}
         <Card>
-          <button onClick={() => setBuying(true)}
-            className="w-full justify-center bg-sann-red hover:bg-sann-red-dk text-white text-base font-medium px-6 py-4 rounded-2xl shadow-sann-md transition-colors">
-            ซื้อ Voucher — ฿299
+          <div className="mb-3 text-[11px] font-bold uppercase tracking-[0.14em] text-sann-muted">
+            ซื้อแล้วเกิดอะไรขึ้น
+          </div>
+          <ol className="flex flex-col gap-3">
+            {[
+              ["ชำระเงินด้วย QR PromptPay", "ไม่มีค่าธรรมเนียม"],
+              ["รับรหัส Voucher ทางอีเมลทันที", "เก็บไว้ใช้ตอนจอง"],
+              ["เลือกวันเข้าพักเมื่อไหร่ก็ได้", "จนถึง 31 มี.ค. 70"],
+            ].map(([head, sub], i) => (
+              <li key={head} className="flex gap-3">
+                <span className="flex h-6 w-6 flex-none items-center justify-center rounded-full
+                  bg-sann-red text-[12px] font-bold text-white">{i + 1}</span>
+                <span className="text-[14px] leading-snug">
+                  <b className="font-semibold">{head}</b>
+                  <span className="block text-[12.5px] text-sann-muted">{sub}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+        </Card>
+
+        <Card>
+          <button onClick={() => setBuying(true)} disabled={!!camp && !camp.open}
+            className="w-full justify-center bg-sann-red hover:bg-sann-red-dk text-white text-base
+              font-medium px-6 py-4 rounded-2xl shadow-sann-md transition-colors
+              disabled:cursor-default disabled:bg-sann-beige disabled:text-sann-muted disabled:shadow-none">
+            {!camp ? "ซื้อ Voucher — ฿299"
+              : camp.reason === "not_started" ? `เปิดขาย ${thDay(camp.opensOn)}`
+              : camp.reason === "sales_closed" ? "ปิดการขายแล้ว"
+              : !camp.open ? "ยังไม่พร้อมขาย"
+              : "ซื้อ Voucher — ฿299"}
           </button>
           <div className="mt-2.5 flex items-center justify-center gap-1.5 text-[12.5px] text-sann-muted">
             <span>🇹🇭</span>
@@ -110,6 +226,18 @@ export default function Sale() {
         </div>
 
         <div className="mx-auto w-full max-w-[460px] lg:mx-0">
+        <Card>
+          <h2 className="mb-1 font-display text-[21px]">คำถามที่พบบ่อย</h2>
+          <Faq q="ซื้อแล้วต้องรีบใช้ไหม"
+            a="ไม่ต้องครับ ซื้อวันนี้แล้วเลือกวันเข้าพักทีหลังได้ ใช้ได้ถึง 31 มีนาคม 2570" />
+          <Faq q="ทำไมพักได้แค่ จันทร์–พฤหัสบดี"
+            a="เป็นคืนที่โฮสเทลว่างมากที่สุด ราคานี้จึงทำได้ คืนศุกร์ เสาร์ อาทิตย์ จองได้ในราคาปกติ" />
+          <Faq q="ถ้าวันที่อยากพักเต็ม"
+            a="Voucher ยังอยู่ครับ เลือกวันอื่นได้จนกว่าจะหมดอายุ หน้าจองจะแสดงเตียงว่างของแต่ละวันให้เห็นก่อนกดยืนยัน" />
+          <Faq q="ซื้อให้คนอื่นได้ไหม"
+            a="ได้ครับ ส่งรหัส Voucher กับลิงก์ในอีเมลให้เขาจองเองได้เลย" last />
+        </Card>
+
         <Card>
           <h2 className="mb-2.5 font-display text-[21px]">เงื่อนไข</h2>
           <ul className="text-[13.5px]">
@@ -130,17 +258,6 @@ export default function Sale() {
           </ul>
         </Card>
 
-        <Card>
-          <h2 className="mb-1 font-display text-[21px]">คำถามที่พบบ่อย</h2>
-          <Faq q="ซื้อแล้วต้องรีบใช้ไหม"
-            a="ไม่ต้องครับ ซื้อวันนี้แล้วเลือกวันเข้าพักทีหลังได้ ใช้ได้ถึง 31 มีนาคม 2570" />
-          <Faq q="ทำไมพักได้แค่ จันทร์–พฤหัสบดี"
-            a="เป็นคืนที่โฮสเทลว่างมากที่สุด ราคานี้จึงทำได้ คืนศุกร์ เสาร์ อาทิตย์ จองได้ในราคาปกติ" />
-          <Faq q="ถ้าวันที่อยากพักเต็ม"
-            a="Voucher ยังอยู่ครับ เลือกวันอื่นได้จนกว่าจะหมดอายุ หน้าจองจะแสดงเตียงว่างของแต่ละวันให้เห็นก่อนกดยืนยัน" />
-          <Faq q="ซื้อให้คนอื่นได้ไหม"
-            a="ได้ครับ ส่งรหัส Voucher กับลิงก์ในอีเมลให้เขาจองเองได้เลย" last />
-        </Card>
 
         {/* ── the way back in ── */}
         <div id="use" className="mt-3.5 scroll-mt-4 rounded-sann-lg border border-sann-line
