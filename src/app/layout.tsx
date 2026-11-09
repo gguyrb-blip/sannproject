@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { BookingModalProvider } from "@/components/BookingModalProvider";
+import CampaignPopup from "@/components/CampaignPopup";
 import "./globals.css";
 
 const geist = Geist({
@@ -70,6 +71,10 @@ export default function RootLayout({
     >
       <body className="font-sans antialiased">
         <BookingModalProvider>{children}</BookingModalProvider>
+        {/* Site-wide, because a campaign is for whoever arrives, on whatever
+           page. It takes itself off every page under /1111 and disappears
+           entirely once the server says the sale has closed. */}
+        <CampaignPopup />
       </body>
     </html>
   );

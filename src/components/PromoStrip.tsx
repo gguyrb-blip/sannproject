@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 // The 11.11 bar, directly under the sticky header and above the hero.
 //
@@ -11,7 +14,28 @@ import Link from "next/link";
 // So it moved up, and it got smaller in exchange. One line, the height of a
 // toolbar: enough to carry the price and the deadline, not enough to make the
 // front page look like a coupon site. The selling is still done on /1111.
+// It also has to STOP. The bar was hardcoded, so on 17 November it would have
+// gone on advertising ฿299 for a sale that had closed the night before —
+// a price the redeem page would then refuse. The campaign window lives in the
+// PMS, which is the only clock that counts; when the server says the sale is
+// over, this renders nothing and nobody has to remember to delete it.
+const ADMIN_API = process.env.NEXT_PUBLIC_ADMIN_API || "https://app.sannstay.com";
+
 export default function PromoStrip() {
+  // null while we do not know yet. Shown on trust until the server answers,
+  // because a bar that flickers in on every page load is worse than one that
+  // is a second late to leave.
+  const [open, setOpen] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    fetch(`${ADMIN_API}/api/public/voucher`)
+      .then(r => r.json())
+      .then((d: { open?: boolean }) => setOpen(d?.open ?? null))
+      .catch(() => {});
+  }, []);
+
+  if (open === false) return null;
+
   return (
     <Link
       href="/1111"
