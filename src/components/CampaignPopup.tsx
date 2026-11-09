@@ -218,10 +218,15 @@ export default function CampaignPopup() {
             )
           )}
 
+          {/* "Buy today" is only true once there is something to buy. Before
+             the sale opens the same sentence is a small lie the visitor can
+             check in one tap, so it waits a day. */}
           <p className="mt-3.5 text-[13.5px] leading-relaxed text-sann-text-lt">
-            ซื้อวันนี้ เลือกวันเข้าพักทีหลัง · ใช้ได้ถึง 31 มี.ค. 70
+            {soon ? "ซื้อแล้วเลือกวันเข้าพักทีหลัง" : "ซื้อวันนี้ เลือกวันเข้าพักทีหลัง"}
+            {" · ใช้ได้ถึง 31 มี.ค. 70"}
             <span className="mt-0.5 block text-[12px]">
-              Buy now, choose your dates later · valid until 31 March 2027
+              {soon ? "Choose your dates later" : "Buy now, choose your dates later"}
+              {" · valid until 31 March 2027"}
             </span>
           </p>
 
