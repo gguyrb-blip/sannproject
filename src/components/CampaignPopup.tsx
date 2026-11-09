@@ -36,12 +36,31 @@ const DELAY_MS = 3500;
 
 type Campaign = {
   open?: boolean;
+  reason?: string | null;
   campaign?: string;
   price?: number;
   faceValue?: number;
+  opensOn?: string;
   closesOn?: string;
   today?: string;
 };
+
+/**
+ * Three states, and only two of them are worth interrupting somebody for.
+ *
+ *   soon   announced, not yet selling. The point of a campaign is that people
+ *          know it is coming; one that appears for the first time on the
+ *          morning it opens has wasted its run-up.
+ *   open   selling. Buy now.
+ *   over   nothing to say. Stay quiet.
+ */
+type Phase = "soon" | "open" | "over" | null;
+const phaseOf = (c: Campaign | null): Phase =>
+  !c ? null
+    : c.reason === "sales_closed" ? "over"
+    : c.open ? "open"
+    : c.reason === "not_started" ? "soon"
+    : null;
 
 const baht = (n: number) => "฿" + n.toLocaleString("en-US");
 const thDay = (d: string) => {
@@ -82,7 +101,9 @@ export default function CampaignPopup() {
   }, [onCampaignPage]);
 
   useEffect(() => {
-    if (onCampaignPage || !camp?.open || !key) return;
+    if (onCampaignPage || !key) return;
+    const p = phaseOf(camp);
+    if (p !== "open" && p !== "soon") return;
     let dismissed = false;
     try { dismissed = localStorage.getItem(key) === "1"; } catch { /* show it */ }
     if (dismissed) return;
@@ -107,11 +128,14 @@ export default function CampaignPopup() {
     return () => { document.body.style.overflow = prev; document.removeEventListener("keydown", onKey); };
   }, [show, close]);
 
-  if (!show || !camp?.open) return null;
+  const phase = phaseOf(camp);
+  if (!show || !camp || (phase !== "open" && phase !== "soon")) return null;
 
   const price = camp.price ?? 299;
   const face = camp.faceValue ?? 350;
+  const soon = phase === "soon";
   const left = camp.today && camp.closesOn ? daysLeft(camp.today, camp.closesOn) : null;
+  const until = camp.today && camp.opensOn ? daysLeft(camp.today, camp.opensOn) - 1 : null;
 
   return (
     <div
@@ -179,10 +203,19 @@ export default function CampaignPopup() {
             </span>
           </div>
 
-          {left !== null && (
-            <div className="mt-3 inline-block rounded-full bg-sann-terracotta-soft px-3 py-1 text-[12.5px] font-bold text-sann-red-dk">
-              เหลืออีก {left} วัน · ขายถึง {camp.closesOn ? thDay(camp.closesOn) : ""}
-            </div>
+          {soon ? (
+            camp.opensOn && (
+              <div className="mt-3 inline-block rounded-full bg-sann-red px-3.5 py-1 text-[12.5px] font-bold text-white">
+                เปิดขาย {thDay(camp.opensOn)}
+                {until !== null && until > 0 ? ` · อีก ${until} วัน` : " · พรุ่งนี้"}
+              </div>
+            )
+          ) : (
+            left !== null && (
+              <div className="mt-3 inline-block rounded-full bg-sann-terracotta-soft px-3 py-1 text-[12.5px] font-bold text-sann-red-dk">
+                เหลืออีก {left} วัน · ขายถึง {camp.closesOn ? thDay(camp.closesOn) : ""}
+              </div>
+            )
           )}
 
           <p className="mt-3.5 text-[13.5px] leading-relaxed text-sann-text-lt">
@@ -198,8 +231,10 @@ export default function CampaignPopup() {
             className="mt-5 block rounded-2xl bg-sann-red px-6 py-[15px] text-[16px] font-medium
               leading-tight text-white shadow-sann-md transition-colors hover:bg-sann-red-dk"
           >
-            ดูโปรโมชั่น
-            <span className="block text-[11px] font-normal opacity-80">See the offer</span>
+            {soon ? "ดูรายละเอียดโปรโมชั่น" : "ดูโปรโมชั่น"}
+            <span className="block text-[11px] font-normal opacity-80">
+              {soon ? "See the details" : "See the offer"}
+            </span>
           </Link>
 
           <button
