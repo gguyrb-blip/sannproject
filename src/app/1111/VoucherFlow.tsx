@@ -83,9 +83,11 @@ export default function VoucherFlow({ onClose }: { onClose: () => void }) {
         >
           {step > 1 ? "‹" : "✕"}
         </button>
-        <div className="flex-1 text-[15px] font-bold">ซื้อ Voucher</div>
+        <div className="flex-1 text-[15px] font-bold">
+          ซื้อ Voucher <span className="font-normal text-sann-muted">· Buy a voucher</span>
+        </div>
         <div className="text-[12.5px] text-sann-muted">
-          ขั้น <b className="text-sann-red">{step}</b>/3
+          <b className="text-sann-red">{step}</b>/3
         </div>
       </div>
       {/* how far */}
@@ -99,9 +101,14 @@ export default function VoucherFlow({ onClose }: { onClose: () => void }) {
       <div className="mx-auto max-w-[460px] px-4 pb-32 pt-4">
         {step === 1 && (
           <>
-            <h2 className="font-display text-[29px] leading-tight">ซื้อกี่ใบ</h2>
+            <h2 className="font-display text-[26px] leading-tight">
+              กรุณาเลือกจำนวน Voucher ที่ต้องการซื้อ
+            </h2>
             <p className="mb-[18px] mt-1 text-[13.5px] leading-relaxed text-sann-muted">
               1 ใบ = 1 เตียง 1 คืน · อยากพัก 2 คืน ซื้อ 2 ใบ
+              <span className="mt-0.5 block text-[12.5px]">
+                Choose how many vouchers you want · 1 voucher = 1 bed for 1 night
+              </span>
             </p>
             <div className="flex items-center justify-between rounded-sann-md bg-sann-warm px-3.5 py-3">
               <div className="flex items-center gap-3.5">
@@ -110,7 +117,7 @@ export default function VoucherFlow({ onClose }: { onClose: () => void }) {
                 <StepBtn onClick={() => setQty(Math.min(MAX, qty + 1))} disabled={qty >= MAX} label="เพิ่มจำนวน">+</StepBtn>
               </div>
               <div className="text-right">
-                <div className="text-[11px] uppercase tracking-[0.1em] text-sann-muted">รวม</div>
+                <div className="text-[11px] uppercase tracking-[0.1em] text-sann-muted">รวม · Total</div>
                 <div className="font-display text-[28px]">{baht(total)}</div>
               </div>
             </div>
@@ -118,78 +125,121 @@ export default function VoucherFlow({ onClose }: { onClose: () => void }) {
               {qty === 1
                 ? `ราคาปกติ ${baht(FACE)} ต่อเตียง · ประหยัด ${baht(FACE - PRICE)}`
                 : `${qty} เตียง หรือ ${qty} คืน · ประหยัดรวม ${baht((FACE - PRICE) * qty)}`}
+              <span className="mt-0.5 block">
+                {qty === 1
+                  ? `Usually ${baht(FACE)} a bed · you save ${baht(FACE - PRICE)}`
+                  : `${qty} beds, or ${qty} nights · you save ${baht((FACE - PRICE) * qty)} in all`}
+              </span>
             </p>
           </>
         )}
 
         {step === 2 && (
           <>
-            <h2 className="font-display text-[29px] leading-tight">ข้อมูลผู้ซื้อ</h2>
+            <h2 className="font-display text-[29px] leading-tight">
+              ข้อมูลผู้ซื้อ <span className="text-[20px] text-sann-muted">· Your details</span>
+            </h2>
             <p className="mb-[18px] mt-1 text-[13.5px] leading-relaxed text-sann-muted">
               รหัส Voucher จะถูกส่งไปที่อีเมลนี้ — กรุณาตรวจสอบให้ถูกต้องก่อนชำระเงิน
+              <span className="mt-0.5 block text-[12.5px]">
+                Your voucher code is emailed here — please check it before paying.
+              </span>
             </p>
-            <Field id="v-name" label="ชื่อ-นามสกุล">
+            <Field id="v-name" label="ชื่อ-นามสกุล" en="Full name">
               <input id="v-name" value={name} onChange={(e) => setName(e.target.value)}
                 placeholder="ชื่อ และ นามสกุล" autoComplete="name" className={INPUT} />
             </Field>
-            <Field id="v-tel" label="เบอร์โทรศัพท์">
+            <Field id="v-tel" label="เบอร์โทรศัพท์" en="Mobile number">
               <input id="v-tel" value={tel} onChange={(e) => setTel(tidyTel(e.target.value))}
                 type="tel" inputMode="numeric" placeholder="08x-xxx-xxxx" maxLength={12}
                 autoComplete="tel" className={INPUT} />
             </Field>
-            <Field id="v-mail" label="อีเมล">
+            <Field id="v-mail" label="อีเมล" en="Email">
               <input id="v-mail" value={mail} onChange={(e) => setMail(e.target.value)}
                 type="email" inputMode="email" placeholder="you@example.com"
                 autoComplete="email" spellCheck={false} className={INPUT} />
             </Field>
             {/* Said once, on the way out of the field — not on every keystroke. */}
-            {mail && !mailOk(mail) && <Note bad>รูปแบบอีเมลไม่ถูกต้อง</Note>}
-            {name && !nameOk(name) && <Note bad>กรุณากรอกทั้งชื่อและนามสกุล</Note>}
+            {mail && !mailOk(mail) && <Note bad>รูปแบบอีเมลไม่ถูกต้อง · That email does not look right</Note>}
+            {name && !nameOk(name) && <Note bad>กรุณากรอกทั้งชื่อและนามสกุล · Please give both names</Note>}
           </>
         )}
 
         {step === 3 && (
           <>
-            <h2 className="font-display text-[29px] leading-tight">ตรวจสอบและชำระเงิน</h2>
+            <h2 className="font-display text-[29px] leading-tight">
+              ตรวจสอบและชำระเงิน <span className="text-[19px] text-sann-muted">· Review and pay</span>
+            </h2>
             <p className="mb-[18px] mt-1 text-[13.5px] leading-relaxed text-sann-muted">
               กดชำระเงินแล้วจะพาไปหน้า QR PromptPay
+              <span className="mt-0.5 block text-[12.5px]">
+                The next screen is a PromptPay QR code.
+              </span>
             </p>
             <div className="rounded-sann-lg border border-sann-line bg-white p-[18px]">
-              <Row k="จำนวน" v={`Voucher เตียงดอร์ม ${qty} ใบ`} />
-              <Row k="ผู้ซื้อ" v={name} />
-              <Row k="อีเมล" v={mail} />
-              <Row k="เบอร์โทร" v={tel} />
-              <Row k="ยอดชำระ" v={baht(total)} bold />
+              <Row k="จำนวน" en="Vouchers" v={`Voucher เตียงดอร์ม ${qty} ใบ`} />
+              <Row k="ผู้ซื้อ" en="Name" v={name} />
+              <Row k="อีเมล" en="Email" v={mail} />
+              <Row k="เบอร์โทร" en="Mobile" v={tel} />
+              <Row k="ยอดชำระ" en="Total" v={baht(total)} bold />
             </div>
             <div className="mt-3 flex items-center justify-center gap-1.5 text-[12.5px] text-sann-muted">
               <span>🇹🇭</span>
-              <span>ชำระผ่าน <b className="text-sann-text">QR PromptPay</b> เท่านั้น · ไม่มีค่าธรรมเนียม</span>
+              <span>
+                ชำระผ่าน <b className="text-sann-text">QR PromptPay</b> เท่านั้น · ไม่มีค่าธรรมเนียม
+                <span className="block">PromptPay QR only · no fee</span>
+              </span>
             </div>
             {hint && <Note bad>{hint}</Note>}
             <p className="mt-3 text-center text-[12.5px] text-sann-muted">
               เมื่อชำระเงินแล้ว รหัส Voucher จะถูกส่งไปที่อีเมลของท่านทันที
+              <span className="mt-0.5 block">Your code is emailed the moment the payment clears.</span>
             </p>
           </>
         )}
       </div>
 
       {/* the action, where the thumb is */}
+      {/* The action, where the thumb is — and Back beside it.
+         Going back used to mean the small chevron in the top-left corner,
+         which on a phone is the hardest place on the screen to reach and the
+         easiest to miss. Someone who wanted to change the quantity after
+         typing their email had to find it. It stays up there as well, because
+         it doubles as Close on the first step. */}
       <div className="fixed inset-x-0 bottom-0 z-20 border-t border-sann-line bg-sann-off
         px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3">
-        <button
-          onClick={() => {
-            if (step === 1) return setStep(2);
-            if (step === 2) return detailsOk && setStep(3);
-            void pay();
-          }}
-          disabled={(step === 2 && !detailsOk) || busy}
-          className="mx-auto block w-full max-w-[428px] text-center bg-sann-red hover:bg-sann-red-dk text-white text-base font-medium px-6 py-4 rounded-2xl shadow-sann-md transition-colors disabled:cursor-default disabled:bg-sann-beige disabled:text-sann-muted disabled:shadow-none"
-        >
-          {busy ? "กำลังสร้าง QR…"
-            : step === 1 ? "ถัดไป →"
-            : step === 2 ? (detailsOk ? "ตรวจสอบรายการ →" : "กรอกข้อมูลให้ครบก่อน")
-            : `ชำระเงิน ${baht(total)}`}
-        </button>
+        <div className="mx-auto flex w-full max-w-[428px] gap-2.5">
+          {step > 1 && (
+            <button
+              onClick={() => setStep(step - 1)}
+              disabled={busy}
+              className="flex-none rounded-2xl border border-sann-line bg-white px-5 py-4
+                text-center text-[15px] font-medium leading-tight text-sann-text
+                transition-colors hover:bg-sann-warm disabled:opacity-40"
+            >
+              ← ย้อนกลับ
+              <span className="block text-[11px] font-normal text-sann-muted">Back</span>
+            </button>
+          )}
+          <button
+            onClick={() => {
+              if (step === 1) return setStep(2);
+              if (step === 2) return detailsOk && setStep(3);
+              void pay();
+            }}
+            disabled={(step === 2 && !detailsOk) || busy}
+            className="flex-1 rounded-2xl bg-sann-red px-6 py-4 text-center text-base font-medium
+              leading-tight text-white shadow-sann-md transition-colors hover:bg-sann-red-dk
+              disabled:cursor-default disabled:bg-sann-beige disabled:text-sann-muted disabled:shadow-none"
+          >
+            {busy ? (<>กำลังสร้าง QR…<span className="block text-[11px] font-normal opacity-80">Creating your QR…</span></>)
+              : step === 1 ? (<>ถัดไป →<span className="block text-[11px] font-normal opacity-80">Next</span></>)
+              : step === 2 ? (detailsOk
+                  ? (<>ตรวจสอบรายการ →<span className="block text-[11px] font-normal opacity-80">Review</span></>)
+                  : (<>กรอกข้อมูลให้ครบก่อน<span className="block text-[11px] font-normal opacity-80">Fill in every field</span></>))
+              : (<>ชำระเงิน {baht(total)}<span className="block text-[11px] font-normal opacity-80">Pay now</span></>)}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -199,10 +249,15 @@ const INPUT =
   "w-full rounded-sann-md border border-sann-line bg-white px-3.5 py-3 text-[15px] " +
   "text-sann-text outline-none focus:border-sann-red focus:ring-2 focus:ring-sann-terracotta-soft";
 
-function Field({ id, label, children }: { id: string; label: string; children: React.ReactNode }) {
+function Field({ id, label, en, children }: {
+  id: string; label: string; en?: string; children: React.ReactNode;
+}) {
   return (
     <div className="mt-3">
-      <label htmlFor={id} className="mb-1.5 block text-[12.5px] font-semibold">{label}</label>
+      <label htmlFor={id} className="mb-1.5 block text-[12.5px] font-semibold">
+        {label}
+        {en && <span className="ml-1.5 font-normal text-sann-muted">· {en}</span>}
+      </label>
       {children}
     </div>
   );
@@ -220,12 +275,14 @@ function StepBtn({ children, onClick, disabled, label }: {
   );
 }
 
-function Row({ k, v, bold }: { k: string; v: string; bold?: boolean }) {
+function Row({ k, en, v, bold }: { k: string; en?: string; v: string; bold?: boolean }) {
   return (
     <div className={`flex justify-between gap-3 py-[7px] ${
       bold ? "mt-1.5 border-t border-sann-line pt-3 text-base font-semibold" : "text-sm"}`}>
-      <span className="text-sann-muted">{k}</span>
-      <b className="font-semibold">{v}</b>
+      <span className="text-sann-muted">
+        {k}{en && <span className="block text-[11px]">{en}</span>}
+      </span>
+      <b className="text-right font-semibold">{v}</b>
     </div>
   );
 }
