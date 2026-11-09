@@ -29,6 +29,26 @@ function tidyTel(raw: string) {
        : d.length > 3 ? `${d.slice(0, 3)}-${d.slice(3)}`
        : d;
 }
+/**
+ * The marketing-email recipient token, if this visit came from one.
+ *
+ * The campaign email links to app.sannstay.com/r/<token>, which counts the
+ * click and redirects here with ?e=<token>. Posting it back with the order is
+ * the only thing that connects "we mailed 192 people" to "this is what it
+ * earned" — Resend's own click tracking stops at Resend's dashboard, where
+ * nothing can be joined to a voucher.
+ *
+ * Read from the URL at click time rather than through useSearchParams, which
+ * would drag a Suspense boundary into a page that does not otherwise need one.
+ * It never blocks a purchase: no token, no attribution, same sale.
+ */
+function emailToken() {
+  try {
+    const t = new URLSearchParams(window.location.search).get("e") ?? "";
+    return /^[0-9a-f]{20,64}$/i.test(t) ? t : undefined;
+  } catch { return undefined; }
+}
+
 const telOk = (v: string) => v.replace(/\D/g, "").length === 10 && v.startsWith("0");
 const mailOk = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
 const nameOk = (v: string) => v.trim().split(/\s+/).filter(Boolean).length >= 2;
@@ -54,7 +74,7 @@ export default function VoucherFlow({ onClose }: { onClose: () => void }) {
       const r = await fetch(`${ADMIN_API}/api/public/voucher`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email: mail, phone: tel, qty }),
+        body: JSON.stringify({ name, email: mail, phone: tel, qty, e: emailToken() }),
       });
       const j = await r.json();
       if (!r.ok || !j.payUrl) {
