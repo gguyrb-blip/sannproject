@@ -32,6 +32,13 @@ const thDay = (d: string) => {
   const [, m, day] = d.split("-").map(Number);
   return `${day} ${M[m - 1]}`;
 };
+/** "2026-11-10" → "10 Nov", for the English half. A Thai date inside an
+ *  English sentence reads as a half-finished translation. */
+const enDay = (d: string) => {
+  const M = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const [, m, day] = d.split("-").map(Number);
+  return `${day} ${M[m - 1]}`;
+};
 const daysBetween = (a: string, b: string) =>
   Math.round((Date.parse(b + "T00:00:00Z") - Date.parse(a + "T00:00:00Z")) / 86400000);
 
@@ -105,10 +112,16 @@ export default function Sale() {
           </div>
           <h1 className="mt-1.5 font-display text-[34px] leading-tight">
             เตียงดอร์ม <em className="italic text-sann-red">ราคาพิเศษ</em>
+            <span className="mt-1 block font-sans text-[15px] font-normal text-sann-muted">
+              A dorm bed at a one-week price
+            </span>
           </h1>
           <div className="mx-auto my-3.5 h-0.5 w-9 bg-sann-red opacity-40" />
           <p className="font-serif text-[17px] italic text-sann-muted">
             ซื้อวันนี้ เลือกวันเข้าพักทีหลัง
+            <span className="mt-0.5 block font-sans text-[13px] not-italic">
+              Buy now, choose your dates later
+            </span>
           </p>
           <div className="my-4 flex items-baseline justify-center gap-3">
             <span className="text-xl text-sann-muted line-through decoration-sann-red-lt decoration-2">฿350</span>
@@ -118,7 +131,7 @@ export default function Sale() {
           </div>
           <span className="inline-block rounded-full bg-sann-terracotta-soft px-3 py-1
             text-xs font-bold text-sann-red-dk">
-            ประหยัด ฿51 ต่อเตียง · 15%
+            ประหยัด ฿51 ต่อเตียง · 15% · save ฿51 a bed
           </span>
 
           {/* When it is on sale. A 11.11 promotion with no dates gives nobody
@@ -133,15 +146,24 @@ export default function Sale() {
                   <span className="text-sann-muted">
                     · อีก {daysBetween(camp.today, camp.opensOn)} วัน · ขาย 7 วันเท่านั้น
                   </span>
+                  <span className="w-full text-center text-[12px] text-sann-muted">
+                    Opens {enDay(camp.opensOn)} · seven days only
+                  </span>
                 </>
               ) : camp.reason === "sales_closed" ? (
-                <b className="font-semibold text-sann-muted">ปิดการขายแล้วเมื่อ {thDay(camp.closesOn)}</b>
+                <b className="font-semibold text-sann-muted">
+                  ปิดการขายแล้วเมื่อ {thDay(camp.closesOn)}
+                  <span className="block text-[12px] font-normal">Sales closed</span>
+                </b>
               ) : (
                 <>
                   <b className="font-semibold text-sann-red">
                     เหลืออีก {Math.max(0, daysBetween(camp.today, camp.closesOn)) + 1} วัน
                   </b>
                   <span className="text-sann-muted">· ขายถึง {thDay(camp.closesOn)} เท่านั้น</span>
+                  <span className="w-full text-center text-[12px] text-sann-muted">
+                    On sale until {enDay(camp.closesOn)} only
+                  </span>
                 </>
               )}
             </div>
@@ -169,7 +191,7 @@ export default function Sale() {
         <div className="mx-auto w-full max-w-[460px] lg:mx-0 lg:sticky lg:top-24">
         <Card>
           <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-sann-muted">
-            1 Voucher = 1 เตียง 1 คืน
+            1 Voucher = 1 เตียง 1 คืน · one bed, one night
           </div>
           <Spec icon="🛏" th="เตียงในห้องดอร์มชาย 10 เตียง" en="A bed in the 10-bed male dormitory" />
           <Spec icon="📅" th="เข้าพักได้คืนวันอาทิตย์–พฤหัสบดี" en="Sunday to Thursday nights only" />
@@ -183,20 +205,21 @@ export default function Sale() {
             below the button that asks for ฿299. */}
         <Card>
           <div className="mb-3 text-[11px] font-bold uppercase tracking-[0.14em] text-sann-muted">
-            ซื้อแล้วเกิดอะไรขึ้น
+            ซื้อแล้วเกิดอะไรขึ้น · what happens next
           </div>
           <ol className="flex flex-col gap-3">
             {[
-              ["ชำระเงินด้วย QR PromptPay", "ไม่มีค่าธรรมเนียม"],
-              ["รับรหัส Voucher ทางอีเมลทันที", "เก็บไว้ใช้ตอนจอง"],
-              ["เลือกวันเข้าพักเมื่อไหร่ก็ได้", "จนถึง 31 มี.ค. 70"],
-            ].map(([head, sub], i) => (
+              ["ชำระเงินด้วย QR PromptPay", "ไม่มีค่าธรรมเนียม", "Pay by PromptPay QR — no fee"],
+              ["รับรหัส Voucher ทางอีเมลทันที", "เก็บไว้ใช้ตอนจอง", "Your code is emailed straight away"],
+              ["เลือกวันเข้าพักเมื่อไหร่ก็ได้", "จนถึง 31 มี.ค. 70", "Choose your dates any time until 31 March 2027"],
+            ].map(([head, sub, en], i) => (
               <li key={head} className="flex gap-3">
                 <span className="flex h-6 w-6 flex-none items-center justify-center rounded-full
                   bg-sann-red text-[12px] font-bold text-white">{i + 1}</span>
                 <span className="text-[14px] leading-snug">
                   <b className="font-semibold">{head}</b>
                   <span className="block text-[12.5px] text-sann-muted">{sub}</span>
+                  <span className="block text-[12px] text-sann-muted">{en}</span>
                 </span>
               </li>
             ))}
@@ -208,52 +231,75 @@ export default function Sale() {
             className="w-full justify-center bg-sann-red hover:bg-sann-red-dk text-white text-base
               font-medium px-6 py-4 rounded-2xl shadow-sann-md transition-colors
               disabled:cursor-default disabled:bg-sann-beige disabled:text-sann-muted disabled:shadow-none">
-            {!camp ? "ซื้อ Voucher — ฿299"
-              : camp.reason === "not_started" ? `เปิดขาย ${thDay(camp.opensOn)}`
-              : camp.reason === "sales_closed" ? "ปิดการขายแล้ว"
-              : !camp.open ? "ยังไม่พร้อมขาย"
-              : "ซื้อ Voucher — ฿299"}
+            {!camp ? (<>ซื้อ Voucher — ฿299<span className="block text-[11.5px] font-normal opacity-85">Buy a voucher</span></>)
+              : camp.reason === "not_started" ? (<>เปิดขาย {thDay(camp.opensOn)}<span className="block text-[11.5px] font-normal opacity-85">Opens {enDay(camp.opensOn)}</span></>)
+              : camp.reason === "sales_closed" ? (<>ปิดการขายแล้ว<span className="block text-[11.5px] font-normal opacity-85">Sales closed</span></>)
+              : !camp.open ? (<>ยังไม่พร้อมขาย<span className="block text-[11.5px] font-normal opacity-85">Not on sale yet</span></>)
+              : (<>ซื้อ Voucher — ฿299<span className="block text-[11.5px] font-normal opacity-85">Buy a voucher</span></>)}
           </button>
           <div className="mt-2.5 flex items-center justify-center gap-1.5 text-[12.5px] text-sann-muted">
             <span>🇹🇭</span>
-            <span>ชำระผ่าน <b className="text-sann-text">QR PromptPay</b> เท่านั้น · ไม่มีค่าธรรมเนียม</span>
+            <span>
+              ชำระผ่าน <b className="text-sann-text">QR PromptPay</b> เท่านั้น · ไม่มีค่าธรรมเนียม
+              <span className="block">PromptPay QR only · no fee</span>
+            </span>
           </div>
           <a href="#use" className="mt-3.5 block border-t border-sann-line pt-3.5 text-center
             text-[13px] font-semibold text-sann-red hover:underline">
             ซื้อไว้แล้ว? ใช้ Voucher ที่นี่
+            <span className="block text-[11.5px] font-normal text-sann-muted">
+              Already bought one? Redeem it here
+            </span>
           </a>
         </Card>
         </div>
 
         <div className="mx-auto w-full max-w-[460px] lg:mx-0">
         <Card>
-          <h2 className="mb-1 font-display text-[21px]">คำถามที่พบบ่อย</h2>
-          <Faq q="ซื้อแล้วต้องรีบใช้ไหม"
-            a="ไม่ต้องครับ ซื้อวันนี้แล้วเลือกวันเข้าพักทีหลังได้ ใช้ได้ถึง 31 มีนาคม 2570" />
-          <Faq q="คืนศุกร์กับเสาร์ใช้ได้ไหม"
-            a="ใช้ไม่ได้ครับ Voucher นี้ใช้ได้เฉพาะคืนวันอาทิตย์ถึงพฤหัสบดี สองคืนสุดสัปดาห์คนแน่นเกือบเต็มทุกสัปดาห์อยู่แล้ว เราเลยกันเตียงไว้ให้การจองปกติ" />
-          <Faq q="ถ้าวันที่อยากพักเต็ม"
-            a="Voucher ยังอยู่ครับ เลือกวันอื่นได้จนกว่าจะหมดอายุ หน้าจองจะแสดงเตียงว่างของแต่ละวันให้เห็นก่อนกดยืนยัน" />
-          <Faq q="ซื้อให้คนอื่นได้ไหม"
-            a="ได้ครับ ส่งรหัส Voucher กับลิงก์ในอีเมลให้เขาจองเองได้เลย" last />
+          <h2 className="mb-1 font-display text-[21px]">
+            คำถามที่พบบ่อย
+            <span className="ml-2 font-sans text-[13px] font-normal text-sann-muted">· FAQ</span>
+          </h2>
+          <Faq q="ซื้อแล้วต้องรีบใช้ไหม" qEn="Do I have to use it soon?"
+            a="ไม่ต้องครับ ซื้อวันนี้แล้วเลือกวันเข้าพักทีหลังได้ ใช้ได้ถึง 31 มีนาคม 2570"
+            aEn="No. Buy it now and choose your dates whenever you like, any time up to 31 March 2027." />
+          <Faq q="คืนศุกร์กับเสาร์ใช้ได้ไหม" qEn="Can I use it on a Friday or Saturday?"
+            a="ใช้ไม่ได้ครับ Voucher นี้ใช้ได้เฉพาะคืนวันอาทิตย์ถึงพฤหัสบดี สองคืนสุดสัปดาห์คนแน่นเกือบเต็มทุกสัปดาห์อยู่แล้ว เราเลยกันเตียงไว้ให้การจองปกติ"
+            aEn="No — Sunday to Thursday nights only. Those two nights are close to full most weeks, so we keep those beds for ordinary bookings." />
+          <Faq q="ถ้าวันที่อยากพักเต็ม" qEn="What if the night I want is full?"
+            a="Voucher ยังอยู่ครับ เลือกวันอื่นได้จนกว่าจะหมดอายุ หน้าจองจะแสดงเตียงว่างของแต่ละวันให้เห็นก่อนกดยืนยัน"
+            aEn="Your voucher keeps. Pick another night any time before it expires — the booking page shows how many beds are free on each date before you confirm." />
+          <Faq q="ซื้อให้คนอื่นได้ไหม" qEn="Can I buy one as a gift?"
+            a="ได้ครับ ส่งรหัส Voucher กับลิงก์ในอีเมลให้เขาจองเองได้เลย"
+            aEn="Yes. Pass on the code and the link from the email and they can book it themselves." last />
         </Card>
 
         <Card>
-          <h2 className="mb-2.5 font-display text-[21px]">เงื่อนไข</h2>
+          <h2 className="mb-2.5 font-display text-[21px]">
+            เงื่อนไข
+            <span className="ml-2 font-sans text-[13px] font-normal text-sann-muted">· Terms</span>
+          </h2>
           <ul className="text-[13.5px]">
             {[
-              "1 Voucher ใช้ได้กับ 1 เตียง 1 คืน",
-              "เข้าพักได้คืนวันอาทิตย์ จันทร์ อังคาร พุธ และพฤหัสบดี",
-              "คืนวันศุกร์และเสาร์ใช้ Voucher นี้ไม่ได้",
-              "จองวันเข้าพักผ่านลิงก์ในอีเมลยืนยัน ขึ้นกับห้องว่าง ณ วันที่จอง",
-              "ใช้ได้ถึง 31 มีนาคม 2570 หลังจากนั้นถือว่าหมดอายุ",
-              "ห้องดอร์มรับเฉพาะผู้เข้าพักชาย",
-            ].map((t) => (
-              <li key={t} className="flex gap-2.5 py-1.5"><span className="text-sann-red">—</span>{t}</li>
+              ["1 Voucher ใช้ได้กับ 1 เตียง 1 คืน", "One voucher covers one bed for one night"],
+              ["เข้าพักได้คืนวันอาทิตย์ จันทร์ อังคาร พุธ และพฤหัสบดี", "Valid on Sunday, Monday, Tuesday, Wednesday and Thursday nights"],
+              ["คืนวันศุกร์และเสาร์ใช้ Voucher นี้ไม่ได้", "Not valid on Friday or Saturday nights"],
+              ["จองวันเข้าพักผ่านลิงก์ในอีเมลยืนยัน ขึ้นกับห้องว่าง ณ วันที่จอง", "Book your dates through the link in the confirmation email, subject to availability"],
+              ["ใช้ได้ถึง 31 มีนาคม 2570 หลังจากนั้นถือว่าหมดอายุ", "Valid until 31 March 2027, after which it expires"],
+              ["ห้องดอร์มรับเฉพาะผู้เข้าพักชาย", "The dormitory is for male guests only"],
+            ].map(([th, en]) => (
+              <li key={th} className="flex gap-2.5 py-1.5">
+                <span className="text-sann-red">—</span>
+                <span>{th}<span className="block text-[12px] text-sann-muted">{en}</span></span>
+              </li>
             ))}
-            {["ไม่สามารถคืนเงินหรือเปลี่ยนเป็นเงินสดได้", "ใช้ร่วมกับโปรโมชั่นอื่นไม่ได้"].map((t) => (
-              <li key={t} className="flex gap-2.5 py-1.5">
-                <span className="pt-0.5 text-[11px] text-sann-red-lt">✕</span>{t}
+            {[
+              ["ไม่สามารถคืนเงินหรือเปลี่ยนเป็นเงินสดได้", "Non-refundable and cannot be exchanged for cash"],
+              ["ใช้ร่วมกับโปรโมชั่นอื่นไม่ได้", "Cannot be combined with another offer"],
+            ].map(([th, en]) => (
+              <li key={th} className="flex gap-2.5 py-1.5">
+                <span className="pt-0.5 text-[11px] text-sann-red-lt">✕</span>
+                <span>{th}<span className="block text-[12px] text-sann-muted">{en}</span></span>
               </li>
             ))}
           </ul>
@@ -263,11 +309,19 @@ export default function Sale() {
         {/* ── the way back in ── */}
         <div id="use" className="mt-3.5 scroll-mt-4 rounded-sann-lg border border-sann-line
           bg-white p-[18px] shadow-sann-sm">
-          <h2 className="mb-1 font-display text-[21px]">ใช้ Voucher ที่ซื้อไว้</h2>
+          <h2 className="mb-1 font-display text-[21px]">
+            ใช้ Voucher ที่ซื้อไว้
+            <span className="ml-2 font-sans text-[13px] font-normal text-sann-muted">· Redeem a voucher</span>
+          </h2>
           <p className="mb-3 text-[13.5px] text-sann-muted">
             กรอกรหัสจากอีเมลยืนยัน เพื่อเลือกวันเข้าพัก
+            <span className="mt-0.5 block text-[12.5px]">
+              Enter the code from your confirmation email to choose your dates.
+            </span>
           </p>
-          <label htmlFor="vcode" className="mb-1.5 block text-[12.5px] font-semibold">รหัส Voucher</label>
+          <label htmlFor="vcode" className="mb-1.5 block text-[12.5px] font-semibold">
+            รหัส Voucher <span className="font-normal text-sann-muted">· Voucher code</span>
+          </label>
           <input id="vcode" value={code}
             onChange={(e) => { setCode(tidyCode(e.target.value)); setMsg(null); }}
             onKeyDown={(e) => { if (e.key === "Enter") void useVoucher(); }}
@@ -282,10 +336,16 @@ export default function Sale() {
           )}
           <button onClick={useVoucher} disabled={code.replace(/-/g, "").length !== 10 || busy}
             className="mt-3.5 w-full justify-center bg-sann-red hover:bg-sann-red-dk text-white text-base font-medium px-6 py-4 rounded-2xl shadow-sann-md transition-colors disabled:cursor-default disabled:bg-sann-beige disabled:text-sann-muted disabled:shadow-none">
-            {busy ? "กำลังตรวจสอบ…" : code.replace(/-/g, "").length !== 10 ? "กรอกรหัสให้ครบก่อน" : "ใช้ Voucher นี้"}
+            {busy ? (<>กำลังตรวจสอบ…<span className="block text-[11.5px] font-normal opacity-85">Checking…</span></>)
+              : code.replace(/-/g, "").length !== 10 ? (<>กรอกรหัสให้ครบก่อน<span className="block text-[11.5px] font-normal opacity-85">Enter the full code</span></>)
+              : (<>ใช้ Voucher นี้<span className="block text-[11.5px] font-normal opacity-85">Use this voucher</span></>)}
           </button>
           <p className="mt-2.5 text-center text-[12.5px] text-sann-muted">
             หาอีเมลไม่เจอ? ทักไลน์ <b className="text-sann-text">@sannstay</b> พร้อมเบอร์ที่ใช้ซื้อ
+            <span className="mt-0.5 block">
+              Cannot find the email? Message <b className="text-sann-text">@sannstay</b> on LINE with the
+              phone number you bought with.
+            </span>
           </p>
         </div>
         </div>
@@ -317,14 +377,23 @@ function Spec({ icon, th, en, last }: { icon: string; th: string; en: string; la
   );
 }
 
-function Faq({ q, a, last }: { q: string; a: string; last?: boolean }) {
+function Faq({ q, qEn, a, aEn, last }: {
+  q: string; qEn?: string; a: string; aEn?: string; last?: boolean;
+}) {
   return (
     <details className={last ? "" : "border-b border-sann-line"}>
       <summary className="flex cursor-pointer list-none justify-between gap-2.5 py-3
         text-[14.5px] font-semibold marker:content-none">
-        {q}<span className="text-lg leading-none text-sann-red">+</span>
+        <span>
+          {q}
+          {qEn && <span className="block text-[12px] font-normal text-sann-muted">{qEn}</span>}
+        </span>
+        <span className="text-lg leading-none text-sann-red">+</span>
       </summary>
-      <p className="pb-3 text-[13.5px] text-sann-muted">{a}</p>
+      <p className="pb-3 text-[13.5px] text-sann-muted">
+        {a}
+        {aEn && <span className="mt-1.5 block text-[12.5px]">{aEn}</span>}
+      </p>
     </details>
   );
 }
