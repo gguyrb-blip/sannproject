@@ -110,11 +110,9 @@ export default async function ThanksPage({
           </div>
 
           <p className="mt-6 text-[12.5px] leading-relaxed text-sann-muted">
-            เข้าพักได้คืนวันอาทิตย์ถึงพฤหัสบดี · คืนศุกร์และเสาร์เพิ่มคืนละ ฿30 จ่ายตอนเลือกวัน ·
-            ใช้ได้ถึง 31 มีนาคม 2570
+            เข้าพักได้เฉพาะคืนวันอาทิตย์ถึงพฤหัสบดี · ใช้ได้ถึง 31 มีนาคม 2570
             <span className="mt-1 block">
-              Sunday to Thursday nights · Friday and Saturday for ฿30 more, paid when you book ·
-              valid until 31 March 2027
+              Sunday to Thursday nights only · valid until 31 March 2027
             </span>
           </p>
         </div>
