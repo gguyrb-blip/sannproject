@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { HERO_IMAGE } from "@/lib/site-data";
+import { HERO_IMAGE, PROPERTIES } from "@/lib/site-data";
 import { ArrowR, Star, Check, DotGrid } from "./icons";
 
 export default function Hero() {
@@ -54,9 +54,18 @@ export default function Hero() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={HERO_IMAGE} alt="Sann Stay bedroom" className="w-full h-full object-cover" />
         </div>
+        {/* The SECOND property, not a second bedroom of the first.
+           Both photos used to be the Hat Yai house, and with a price card
+           reading "per house · Sann Stay Hatyai" underneath them, the whole
+           hero argued that SANN is one 4-bedroom home — while the paragraph
+           beside it said "a 4-bedroom home and a hostel" and the counter said
+           2 properties. People read pictures and prices, not paragraphs. */}
         <div className="absolute bottom-0 left-0 w-[52%] h-[48%] rounded-sann-xl overflow-hidden shadow-sann-lg border-8 border-sann-cream">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/hero-2.jpg" alt="Sann Stay room" className="w-full h-full object-cover" />
+          <img src="/images/thungsao-3.jpg" alt="SANN Thungsao Hostel room" className="w-full h-full object-cover" />
+          <span className="absolute bottom-2 left-2 rounded-full bg-white/90 px-2.5 py-1 text-[0.62rem] font-medium text-sann-text shadow-sann-sm">
+            Thungsao Hostel
+          </span>
         </div>
 
         <div className="absolute top-7 left-[-8px] sm:left-[-20px] bg-white rounded-sann-md shadow-sann-lg p-3.5 flex items-center gap-3 max-w-[250px]">
@@ -69,12 +78,27 @@ export default function Hero() {
           </div>
         </div>
 
-        <div className="absolute bottom-12 right-[-8px] sm:right-[-24px] bg-white rounded-sann-md shadow-sann-lg p-3.5 max-w-[210px]">
+        {/* TWO prices, cheapest first.
+           A single "FROM ฿3,500 / night · per house" is the loudest thing on
+           the page, and it priced the whole brand as an entire-home rental.
+           Anyone looking for a ฿350 dorm bed read that number and left. The
+           two together say what SANN actually is in the space where one
+           number used to mislead — and they come from PROPERTIES, so a rate
+           change is one edit in site-data rather than a stale hero. */}
+        <div className="absolute bottom-12 right-[-8px] sm:right-[-24px] bg-white rounded-sann-md shadow-sann-lg p-3.5 max-w-[232px]">
           <div className="font-mono text-[0.62rem] text-sann-text-lt tracking-[0.12em]">FROM</div>
-          <div className="font-mono text-2xl font-medium mt-0.5 text-sann-text">
-            ฿3,500<span className="text-[0.8rem] text-sann-text-lt font-normal"> / night</span>
-          </div>
-          <div className="text-[0.7rem] text-sann-text-lt mt-0.5">per house · Sann Stay Hatyai</div>
+          {[...PROPERTIES]
+            .slice()
+            .sort((a, b) => priceNum(a.price) - priceNum(b.price))
+            .map((p, i) => (
+              <div key={p.id} className={i ? "mt-2 border-t border-sann-line pt-2" : "mt-0.5"}>
+                <div className="font-mono text-[1.35rem] font-medium leading-none text-sann-text">
+                  {p.price}
+                  <span className="text-[0.75rem] font-normal text-sann-text-lt"> {p.priceUnit}</span>
+                </div>
+                <div className="mt-1 text-[0.7rem] text-sann-text-lt">{p.name}</div>
+              </div>
+            ))}
         </div>
       </div>
     </section>
@@ -94,4 +118,9 @@ function Stat({ n, l, star }: { n: string; l: string; star?: boolean }) {
 }
 function Div() {
   return <div className="w-px h-7 bg-sann-line" />;
+}
+
+/** "฿3,500" → 3500, so the cheaper property leads whatever the rates become. */
+function priceNum(p: string) {
+  return Number(String(p).replace(/[^\d.]/g, "")) || 0;
 }
