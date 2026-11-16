@@ -28,10 +28,12 @@ const config: Config = {
         },
       },
       fontFamily: {
-        display: ["var(--font-instrument)", "Instrument Serif", "serif"],
-        serif: ["var(--font-instrument)", "Instrument Serif", "serif"],
-        sans: ["var(--font-geist)", "Geist", "system-ui", "sans-serif"],
-        mono: ["var(--font-geist-mono)", "Geist Mono", "ui-monospace", "monospace"],
+        // Thai letters come from LINE Seed Sans TH (lib/fonts.ts), which covers
+        // only Thai — so it can sit in every stack without touching English.
+        display: ["var(--font-instrument)", "Instrument Serif", "var(--font-line-seed)", "serif"],
+        serif: ["var(--font-instrument)", "Instrument Serif", "var(--font-line-seed)", "serif"],
+        sans: ["var(--font-geist)", "Geist", "var(--font-line-seed)", "system-ui", "sans-serif"],
+        mono: ["var(--font-geist-mono)", "Geist Mono", "var(--font-line-seed)", "ui-monospace", "monospace"],
       },
       borderRadius: {
         "sann-md": "16px",

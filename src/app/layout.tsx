@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import { lineSeed } from "@/lib/fonts";
 import { BookingModalProvider } from "@/components/BookingModalProvider";
 import CampaignPopup from "@/components/CampaignPopup";
 import "./globals.css";
@@ -67,7 +68,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geist.variable} ${geistMono.variable} ${instrument.variable}`}
+      className={`${geist.variable} ${geistMono.variable} ${instrument.variable} ${lineSeed.variable}`}
     >
       <body className="font-sans antialiased">
         <BookingModalProvider>{children}</BookingModalProvider>
