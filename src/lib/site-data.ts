@@ -129,13 +129,60 @@ export const GALLERY: GalleryCategory[] = [
   album("room-4", "Room 4 · 3rd floor", 5),
 ];
 
-// Real guest reviews from Sann Stay Hatyai.
+// ── Reviews ────────────────────────────────────────────────────────────────
+//
+// What each platform scores us, read off the platforms' own pages. These are
+// facts — a score and a count — and each card links to the reviews themselves,
+// so a guest can read every word where it was written. Re-read them now and
+// then and update `checked`: a rating the page shows has to be the rating the
+// platform shows (the old "4.9 on Airbnb" outlived the listing's real 4.67).
+export type ReviewPlatform = "booking" | "trip" | "airbnb" | "google";
+export type ReviewProperty = "hatyai" | "thungsao";
+export type PlatformScore = {
+  platform: ReviewPlatform;
+  property: ReviewProperty;
+  score: number;
+  outOf: 5 | 10;
+  count: number;
+  /** The platform's own word for the score ("Very good", "Amazing"). */
+  label?: string;
+  url: string;
+  /** Sub-scores, where the platform shows them. */
+  detail?: { th: string; en: string; v: number }[];
+};
+
+export const REVIEW_SCORES_CHECKED = "2026-11-16";
+
+export const REVIEW_SCORES: PlatformScore[] = [
+  { platform: "trip", property: "thungsao", score: 9.4, outOf: 10, count: 49, label: "Amazing",
+    url: "https://us.trip.com/hotels/detail/?hotelId=135453140&locale=en-US",
+    detail: [{ th: "ความสะอาด", en: "Cleanliness", v: 9.4 }, { th: "ทำเล", en: "Location", v: 9.2 }, { th: "สิ่งอำนวยความสะดวก", en: "Amenities", v: 9.2 }] },
+  { platform: "airbnb", property: "hatyai", score: 4.67, outOf: 5, count: 12,
+    url: "https://www.airbnb.com/rooms/1672362046238838999" },
+  { platform: "google", property: "thungsao", score: 4.9, outOf: 5, count: 8,
+    url: "https://www.google.com/maps/place/Sann+Thungsao+Hostel/@6.9968557,100.4812507,17z" },
+  { platform: "booking", property: "hatyai", score: 8.2, outOf: 10, count: 5, label: "Very good",
+    url: "https://www.booking.com/hotel/th/sann-stay-hatyai-4-min-walk-to-leegarden.html" },
+  { platform: "booking", property: "thungsao", score: 10, outOf: 10, count: 2, label: "Exceptional",
+    url: "https://www.booking.com/hotel/th/sann-thungsao-hostel-5-min-to-central-hatyai.html" },
+  { platform: "google", property: "hatyai", score: 4.6, outOf: 5, count: 7,
+    url: "https://www.google.com/maps/place/Sann+Stay+Hatyai/@7.00601,100.4732618,17z" },
+  { platform: "airbnb", property: "thungsao", score: 5, outOf: 5, count: 3,
+    url: "https://www.airbnb.com/rooms/1741805168668146639" },
+  { platform: "trip", property: "hatyai", score: 8.3, outOf: 10, count: 2, label: "Very good",
+    url: "https://us.trip.com/hotels/detail/?hotelId=134911455&locale=en-US" },
+];
+
+// Guest quotes shown on the home page. Each one is a guest's own words, so add
+// only reviews you are happy to republish, credited to the guest's first name
+// and the platform it came from.
 export type Testimonial = {
   quote: string;
   author: string;
   location: string;
   rating: number;
   via: string;
+  property?: ReviewProperty;
 };
 
 export const TESTIMONIALS: Testimonial[] = [
