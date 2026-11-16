@@ -87,14 +87,14 @@ function Stars({ n }: { n: number }) {
 function QuoteCard({ t, lang }: { t: Testimonial; lang: Lang }) {
   return (
     <figure className="rv-card flex w-[300px] sm:w-[340px] flex-none flex-col gap-3 rounded-[22px] bg-white p-5 sm:p-6 text-[#2A2420] shadow-[0_10px_30px_-18px_rgba(27,23,20,.45)]">
-      <div className="flex items-center gap-2 text-sm"><Stars n={t.rating} /><span className="font-semibold">{t.rating.toFixed(1)}</span></div>
+      <div className="flex items-center gap-2 text-sm"><Stars n={t.rating} /><span className="font-normal">{t.rating.toFixed(1)}</span></div>
       <blockquote className="m-0 text-[1.02rem] leading-relaxed rv-clamp">&ldquo;{t.quote}&rdquo;</blockquote>
       <figcaption className="mt-auto flex items-center gap-3 pt-1">
-        <span className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-sann-red font-semibold text-white">
+        <span className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-sann-red font-normal text-white">
           {t.author.slice(0, 1).toUpperCase()}
         </span>
         <span className="min-w-0">
-          <span className="block font-semibold leading-tight">{t.author}</span>
+          <span className="block font-normal leading-tight">{t.author}</span>
           <span className="block truncate text-xs text-[#8B8178]">{t.location} · {t.via}</span>
         </span>
       </figcaption>
@@ -111,14 +111,14 @@ function ScoreCard({ s, lang }: { s: PlatformScore; lang: Lang }) {
       <div className="flex items-center gap-2.5">
         <PlatformMark p={s.platform} size={26} />
         <span className="min-w-0">
-          <span className="block text-sm font-semibold leading-tight">{m.name}</span>
+          <span className="block text-sm font-normal leading-tight">{m.name}</span>
           <span className="block truncate text-xs text-[#8B8178]">{PROP[s.property].name}</span>
         </span>
       </div>
       <div className="flex items-baseline gap-1.5">
-        <span className="text-[2.6rem] font-semibold leading-none tracking-tight" style={{ color: m.color }}>{fmtScore(s)}</span>
+        <span className="text-[2.6rem] font-normal leading-none tracking-tight" style={{ color: m.color }}>{fmtScore(s)}</span>
         <span className="text-sm text-[#8B8178]">/{s.outOf}</span>
-        {s.label && <span className="ml-1 text-sm font-medium">{s.label}</span>}
+        {s.label && <span className="ml-1 text-sm font-normal">{s.label}</span>}
       </div>
       <div className="text-sm text-[#5F5650]">{s.count} {T.reviews[lang]}</div>
       {s.detail && (
@@ -128,7 +128,7 @@ function ScoreCard({ s, lang }: { s: PlatformScore; lang: Lang }) {
           ))}
         </div>
       )}
-      <span className="mt-auto text-xs font-semibold text-sann-red">{T.read[lang]} →</span>
+      <span className="mt-auto text-xs font-normal text-sann-red">{T.read[lang]} →</span>
     </a>
   );
 }
@@ -145,6 +145,10 @@ function Row({ children, reverse, seconds }: { children: React.ReactNode[]; reve
   );
 }
 
+// Every word here is set in the site's body face at its regular weight — the
+// same as the hero's "Boutique accommodation…" paragraph. The first version
+// used a bold weight for headings and scores, and the band read as a
+// different website from the sections around it.
 export default function TestimonialsSection() {
   const [lang, setLang] = useState<Lang>("en");
   useEffect(() => { setLang(pickLang()); }, []);
@@ -179,7 +183,7 @@ export default function TestimonialsSection() {
       <div className="mx-auto max-w-6xl">
         <header className="mb-8 text-center">
           <div className="mb-2 font-mono text-xs uppercase tracking-[0.2em] text-[#A9A19A]">{T.eyebrow[lang]}</div>
-          <h2 className="m-0 text-4xl font-semibold leading-tight lg:text-[3.2rem]">{T.title[lang]}</h2>
+          <h2 className="m-0 text-4xl font-normal leading-tight lg:text-[3.2rem]">{T.title[lang]}</h2>
         </header>
 
         <div className="overflow-hidden rounded-[32px] py-6 sm:py-8"
@@ -194,10 +198,10 @@ export default function TestimonialsSection() {
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={PROP[p].image} alt="" className="h-16 w-16 flex-none rounded-full object-cover" loading="lazy" />
                     <div className="min-w-0">
-                      <div className="text-lg font-semibold leading-tight">{PROP[p].name}</div>
+                      <div className="text-lg font-normal leading-tight">{PROP[p].name}</div>
                       {b && (
                         <div className="mt-0.5 text-sm text-[#8B8178]">
-                          <span className="font-semibold text-[#E8A33D]">{fmtScore(b)}{b.outOf === 5 ? " ★" : `/${b.outOf}`}</span> {T.on[lang]} {PLATFORM[b.platform].name} · {b.count} {T.reviews[lang]}
+                          <span className="font-normal text-[#E8A33D]">{fmtScore(b)}{b.outOf === 5 ? " ★" : `/${b.outOf}`}</span> {T.on[lang]} {PLATFORM[b.platform].name} · {b.count} {T.reviews[lang]}
                         </div>
                       )}
                     </div>
@@ -209,7 +213,7 @@ export default function TestimonialsSection() {
                       <a key={s.platform} href={s.url} target="_blank" rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 rounded-full border border-[#ECDFCF] bg-[#FBF8F4] py-1 pl-1 pr-2.5 text-xs text-[#2A2420] no-underline hover:border-sann-red">
                         <PlatformMark p={s.platform} size={18} />
-                        <b>{fmtScore(s)}</b><span className="text-[#8B8178]">({s.count})</span>
+                        <span>{fmtScore(s)}</span><span className="text-[#8B8178]">({s.count})</span>
                       </a>
                     ))}
                   </div>
@@ -229,7 +233,7 @@ export default function TestimonialsSection() {
         </div>
 
         <div className="mt-10">
-          <p className="m-0 text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl">
+          <p className="m-0 text-4xl font-normal leading-tight sm:text-5xl lg:text-6xl">
             <span className="bg-gradient-to-r from-[#F2A25C] to-[#D9542C] bg-clip-text text-transparent">{T.real[lang]}</span>{T.realRest[lang]}
           </p>
           <p className="mt-3 text-base text-[#A9A19A] sm:text-lg">
