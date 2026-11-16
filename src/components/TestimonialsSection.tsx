@@ -9,7 +9,7 @@
 // The scores are the platforms' own numbers (lib/site-data REVIEW_SCORES, with
 // the date they were read). Nothing here is rounded up or picked from the best
 // platform only: a guest who clicks through finds what this page said.
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   PROPERTIES, REVIEW_SCORES, REVIEW_SCORES_CHECKED, TESTIMONIALS,
   type PlatformScore, type ReviewPlatform, type ReviewProperty, type Testimonial,
@@ -133,11 +133,126 @@ function ScoreCard({ s, lang }: { s: PlatformScore; lang: Lang }) {
   );
 }
 
-/** A row that drifts sideways forever: the cards twice over, moved by half. */
-function Row({ children, reverse, seconds }: { children: React.ReactNode[]; reverse?: boolean; seconds: number }) {
+/**
+ * A row that drifts sideways on its own — and that a guest can move too:
+ * swipe on a phone, drag with a mouse, scroll with a trackpad.
+ *
+ * It is a real scrolling box holding the cards twice over. The drift nudges
+ * scrollLeft a little every frame, and passing the halfway point jumps back by
+ * exactly one copy, so the row never runs out in either direction — whether the
+ * drift or a guest's thumb got it there. Hands on the row (hover, touch, drag,
+ * wheel, keyboard focus) stop the drift; it picks up again a moment after they
+ * let go. With reduced motion asked for, it never drifts and simply scrolls.
+ */
+function Row({ children, reverse, speed = 30 }: { children: React.ReactNode[]; reverse?: boolean; speed?: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const half = () => el.scrollWidth / 2;
+    let pos = 0, last = 0, raf = 0, holdUntil = 0, hover = false, focus = false;
+    let drag: { x: number; left: number; moved: boolean } | null = null;
+    let dragged = false;
+
+    const wrap = () => {
+      const h = half();
+      if (h <= 0) return;
+      if (el.scrollLeft >= h) el.scrollLeft -= h;
+      else if (el.scrollLeft <= 0) el.scrollLeft += h;
+    };
+    const hold = (ms: number) => { holdUntil = performance.now() + ms; };
+
+    // The leftward row starts one copy in, so it has somewhere to go.
+    if (reverse) el.scrollLeft = half();
+    pos = el.scrollLeft;
+
+    const step = (t: number) => {
+      const dt = last ? Math.min(64, t - last) : 0;
+      last = t;
+      if (!reduce && !hover && !focus && !drag && t > holdUntil) {
+        const h = half();
+        pos += (reverse ? -1 : 1) * speed * dt / 1000;
+        if (h > 0) { if (pos >= h) pos -= h; else if (pos <= 0) pos += h; }
+        el.scrollLeft = pos;
+      } else {
+        pos = el.scrollLeft;
+      }
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+
+    const onScroll = () => { wrap(); };
+    const onEnter = () => { hover = true; };
+    const onLeave = () => { hover = false; hold(1200); };
+    const onTouch = () => hold(3500);
+    const onWheel = () => hold(2500);
+    const onFocusIn = () => { focus = true; };
+    const onFocusOut = () => { focus = false; hold(1500); };
+    // A mouse drags; a finger already scrolls the box natively.
+    const onDown = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse" || e.button !== 0) return;
+      drag = { x: e.clientX, left: el.scrollLeft, moved: false };
+      dragged = false;
+    };
+    const onMove = (e: PointerEvent) => {
+      if (!drag) return;
+      const dx = e.clientX - drag.x;
+      if (!drag.moved && Math.abs(dx) > 5) {
+        drag.moved = true;
+        el.classList.add("rv-dragging");
+        // Keeps the drag going if the mouse leaves the row; a browser that
+        // refuses still drags while the pointer stays over it.
+        try { el.setPointerCapture(e.pointerId); } catch { /* not capturable */ }
+      }
+      if (drag.moved) { el.scrollLeft = drag.left - dx; wrap(); }
+    };
+    const onUp = () => {
+      if (!drag) return;
+      dragged = drag.moved;
+      drag = null;
+      el.classList.remove("rv-dragging");
+      hold(1500);
+    };
+    // A drag that ends over a score card must not also open its link.
+    const onClick = (e: MouseEvent) => {
+      if (dragged) { e.preventDefault(); e.stopPropagation(); dragged = false; }
+    };
+
+    el.addEventListener("scroll", onScroll, { passive: true });
+    el.addEventListener("mouseenter", onEnter);
+    el.addEventListener("mouseleave", onLeave);
+    el.addEventListener("touchstart", onTouch, { passive: true });
+    el.addEventListener("touchmove", onTouch, { passive: true });
+    el.addEventListener("wheel", onWheel, { passive: true });
+    el.addEventListener("focusin", onFocusIn);
+    el.addEventListener("focusout", onFocusOut);
+    el.addEventListener("pointerdown", onDown);
+    el.addEventListener("pointermove", onMove);
+    el.addEventListener("pointerup", onUp);
+    el.addEventListener("pointercancel", onUp);
+    el.addEventListener("click", onClick, true);
+    return () => {
+      cancelAnimationFrame(raf);
+      el.removeEventListener("scroll", onScroll);
+      el.removeEventListener("mouseenter", onEnter);
+      el.removeEventListener("mouseleave", onLeave);
+      el.removeEventListener("touchstart", onTouch);
+      el.removeEventListener("touchmove", onTouch);
+      el.removeEventListener("wheel", onWheel);
+      el.removeEventListener("focusin", onFocusIn);
+      el.removeEventListener("focusout", onFocusOut);
+      el.removeEventListener("pointerdown", onDown);
+      el.removeEventListener("pointermove", onMove);
+      el.removeEventListener("pointerup", onUp);
+      el.removeEventListener("pointercancel", onUp);
+      el.removeEventListener("click", onClick, true);
+    };
+  }, [reverse, speed]);
+
   return (
-    <div className={`rv-row ${reverse ? "rv-rev" : ""}`}>
-      <div className="rv-track" style={{ animationDuration: `${seconds}s` }}>
+    <div ref={ref} className="rv-row">
+      <div className="rv-track">
         {children.map((c, i) => <div key={`a${i}`} className="rv-cell">{c}</div>)}
         {children.map((c, i) => <div key={`b${i}`} className="rv-cell" aria-hidden="true">{c}</div>)}
       </div>
@@ -171,14 +286,12 @@ export default function TestimonialsSection() {
   return (
     <section id="testimonials" className="bg-[#1B1714] px-4 sm:px-8 lg:px-14 py-16 lg:py-24 text-[#F8F6F2]">
       <style>{`
-        .rv-row{overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)}
-        .rv-track{display:flex;width:max-content;animation:rv-scroll linear infinite}
-        .rv-rev .rv-track{animation-direction:reverse}
-        .rv-row:hover .rv-track{animation-play-state:paused}
+        .rv-row{overflow-x:auto;overflow-y:hidden;scroll-behavior:auto;overscroll-behavior-x:contain;scrollbar-width:none;cursor:grab;-webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)}
+        .rv-row::-webkit-scrollbar{display:none}
+        .rv-row.rv-dragging{cursor:grabbing;user-select:none}
+        .rv-track{display:flex;width:max-content}
         .rv-cell{padding-right:16px;display:flex}
         .rv-clamp{display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
-        @keyframes rv-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-        @media (prefers-reduced-motion:reduce){.rv-track{animation:none}.rv-row{overflow-x:auto;-webkit-mask-image:none;mask-image:none}}
       `}</style>
       <div className="mx-auto max-w-6xl">
         <header className="mb-8 text-center">
@@ -223,10 +336,10 @@ export default function TestimonialsSection() {
           </div>
 
           <div className="flex flex-col gap-4">
-            <Row seconds={Math.max(40, quotes.length * 9)}>
+            <Row speed={32}>
               {quotes.map((t, i) => <QuoteCard key={i} t={t} lang={lang} />)}
             </Row>
-            <Row reverse seconds={Math.max(36, REVIEW_SCORES.length * 7)}>
+            <Row reverse speed={28}>
               {REVIEW_SCORES.map(s => <ScoreCard key={`${s.platform}-${s.property}`} s={s} lang={lang} />)}
             </Row>
           </div>
