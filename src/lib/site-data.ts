@@ -225,10 +225,19 @@ export const TESTIMONIALS: Testimonial[] = [
     via: "Airbnb",
     property: "hatyai",
   },
-  // SANN Thungsao Hostel — Trip.com reviews the owner chose to republish
-  // (17 Nov 2026), as Trip.com shows them in English. Scores on Trip.com's
-  // own scale of 10. Guests are credited by first name or the name they
-  // posted under; "Anonymous" is how Trip.com lists those who gave none.
+  // SANN Thungsao Hostel — Google and Trip.com reviews the owner chose to
+  // republish (17 Nov 2026), in English as each platform shows them. Scores
+  // on the platform's own scale (Google 5, Trip.com 10). Guests are credited
+  // by first name or the name they posted under; "Anonymous" is how Trip.com
+  // lists those who gave none.
+  {
+    quote: "Had a lovely stay at this hostel! The place is cosy, clean and aesthetically pleasing, with a warm and welcoming atmosphere. The facilities are well equipped too. Apart from the shower room, they also provide a hair dryer and an iron, which is a nice plus. They also offer free drinking water from a Coway water dispenser.\n\nThe location is another highlight. It’s close to Hatyai Bus Station, within walking distance of ASEAN Night Market and has plenty of convenient options nearby, including 7-11 and affordable halal food spots like Nureehan and Fateehah.\n\nOverall, a comfortable and pleasant stay. Definitely a place I’d recommend if you’re visiting Hatyai!",
+    author: "Fay", location: "Nov 2026", rating: 5, via: "Google", property: "thungsao",
+  },
+  {
+    quote: "Malaysians who want to stay can afford it. I suggest you stay here, comfortable beds, clean lockers, clean toilets, clean rooms👍. I swear I didn't expect a cheap price but got everything complete",
+    author: "Asna", location: "Trip with friends · Nov 2026", rating: 5, via: "Google", property: "thungsao",
+  },
   {
     quote: "Great value for money, very clean rooms, cold air conditioning, and free drinking water. I loved it, and the housekeeping staff were very kind.",
     author: "Anonymous", location: "Dorm bed · Nov 2026", rating: 9.5, outOf: 10, via: "Trip.com", property: "thungsao",

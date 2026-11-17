@@ -117,7 +117,7 @@ function QuoteCard({ t, lang, onOpen }: { t: Testimonial; lang: Lang; onOpen: (t
   return (
     <figure className="rv-card flex w-[300px] sm:w-[380px] flex-none flex-col gap-3 rounded-sann-lg bg-sann-card p-5 sm:p-6 text-sann-text shadow-sann-md">
       <div className="flex items-center gap-2 text-sm"><Rating t={t} /></div>
-      <blockquote ref={textRef} className="m-0 font-display text-[1.06rem] leading-[1.45] rv-clamp">&ldquo;{t.quote}&rdquo;</blockquote>
+      <blockquote ref={textRef} className="m-0 font-display text-[1.06rem] leading-[1.45] whitespace-pre-line rv-clamp">&ldquo;{t.quote}&rdquo;</blockquote>
       {cut && (
         <button type="button" onClick={() => onOpen(t)}
           className="self-start -mt-1 text-sm font-medium text-sann-red hover:underline">
@@ -155,7 +155,7 @@ function ReviewWindow({ t, lang, onClose }: { t: Testimonial; lang: Lang; onClos
           className="absolute top-3 right-3 w-9 h-9 rounded-full border border-sann-line bg-sann-card text-sann-text">✕</button>
         <div className="text-xs text-sann-text-lt mb-2">{place.name}</div>
         <div className="flex items-center gap-2 text-sm mb-3"><Rating t={t} /></div>
-        <blockquote className="m-0 font-display text-[1.15rem] leading-[1.5]">&ldquo;{t.quote}&rdquo;</blockquote>
+        <blockquote className="m-0 font-display text-[1.15rem] leading-[1.5] whitespace-pre-line">&ldquo;{t.quote}&rdquo;</blockquote>
         <figcaption className="mt-5 flex items-center gap-3">
           <span className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-sann-terracotta-soft font-medium text-sann-red">
             {t.author.slice(0, 1).toUpperCase()}
