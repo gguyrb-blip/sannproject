@@ -10,8 +10,13 @@
 // If she is not there — switched off in Admin, the PMS not yet answering this
 // site, a network that blocks it — `enabled` stays false and the ask box sends
 // the guest to /book instead. Nobody types into a box that goes nowhere.
+//
+// She opens by asking which place, with a card for each one she can book (the
+// PMS says which: each place has its own switch in Admin). The cards are drawn
+// here from site-data, not sent by her, so they cost nothing and never come
+// twice.
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CONTACT } from "@/lib/site-data";
+import { CONTACT, PROPERTIES } from "@/lib/site-data";
 
 export const ADMIN_API = process.env.NEXT_PUBLIC_ADMIN_API || "https://app.sannstay.com";
 /** Both properties: the site sells the house and the hostel. */
@@ -38,10 +43,15 @@ interface Card {
   status: "pending_payment" | "confirmed"; payUrl: string | null; holdUntil: string | null
 }
 interface Room {
-  unit: string; name: string; kind: "dorm" | "room"; sleeps: number; bedInfo: string | null
+  unit: string; name: string; kind: "dorm" | "room" | "whole"; sleeps: number; bedInfo: string | null
   rate: number; total: number; photos: string[]; amenities: string[]; maleOnly: boolean
 }
-interface Rooms { checkIn: string; checkOut: string; nights: number; rooms: Room[] }
+interface Rooms {
+  checkIn: string; checkOut: string; nights: number; rooms: Room[]
+  property?: { slug: string; name: string; type: string }
+}
+/** A place she can book, as the PMS names it. */
+export interface Place { slug: string; name: string; type: string }
 type Event = { type: "text"; text: string } | { type: "card"; card: Card } | { type: "rooms"; rooms: Rooms };
 type Item =
   | { kind: "me"; text: string }
@@ -54,9 +64,23 @@ const T = {
   name: { th: "ซาซานิ", en: "Sasani" },
   role: { th: "ผู้ช่วยจองห้อง SANN · AI", en: "SANN booking assistant · AI" },
   hi: {
-    th: "สวัสดีค่ะ **ซาซานิ**เองค่ะ เช็คห้องว่าง เสนอราคา และจองให้ในแชทนี้ได้เลยค่ะ สนใจเข้าพักที่ไหน วันไหนคะ?",
-    en: "Hi! I’m **Sasani**. I can check free rooms, quote the price and book your stay right here. Where and when would you like to stay?",
+    th: "สวัสดีค่ะ **ซาซานิ**เองค่ะ เช็คห้องว่าง เสนอราคา และจองให้ในแชทนี้ได้เลยค่ะ สนใจเข้าพักที่ไหนคะ?",
+    en: "Hi! I’m **Sasani**. I can check what’s free, quote the price and book your stay right here. Which place would you like?",
   },
+  /** One place only (the other switched off): no choice to ask about. */
+  hi1: {
+    th: "สวัสดีค่ะ **ซาซานิ**เองค่ะ เช็คห้องว่าง เสนอราคา และจองให้ในแชทนี้ได้เลยค่ะ อยากเข้าพักวันไหน กี่ท่านคะ?",
+    en: "Hi! I’m **Sasani**. I can check what’s free, quote the price and book your stay right here. Which dates, and how many of you?",
+  },
+  choose: { th: "เลือกที่นี่", en: "Choose this" },
+  // Neutral: the guest may be a man or a woman.
+  chooseMsg: { th: "สนใจ {name}", en: "I’m interested in {name}" },
+  from: { th: "เริ่มต้น", en: "From" },
+  blurb: {
+    house: { th: "บ้านทั้งหลัง 4 ห้องนอน · พักได้ 8 ท่าน · ใกล้ลีการ์เด้นส์", en: "A whole 4-bedroom house · sleeps 8 · near Lee Garden" },
+    hostel: { th: "เตียงดอร์มชาย และห้องส่วนตัว · ใกล้ บขส.", en: "Men’s dorm beds and private rooms · by the bus terminal" },
+  } as Record<string, Record<Lang, string>>,
+  bookHouse: { th: "จองบ้านหลังนี้", en: "Book the house" },
   ph: { th: "พิมพ์ข้อความถึงซาซานิ…", en: "Message Sasani…" },
   send: { th: "ส่ง", en: "Send" },
   close: { th: "ปิดแชท", en: "Close chat" },
@@ -110,7 +134,13 @@ function toHistory(items: Item[]) {
     if (it.kind === "me") push("user", it.text);
     else if (it.kind === "bot") push("assistant", it.text);
     else if (it.kind === "card") push("assistant", `(Booking ${it.card.refs.join(", ")} was created in this chat: ${it.card.checkIn} → ${it.card.checkOut}, total ${it.card.total} THB, ${it.card.status === "confirmed" ? "confirmed" : "awaiting payment"}.)`);
-    else if (it.kind === "rooms") push("assistant", `(Shown to the guest as cards: ${it.rooms.rooms.map(r => r.name).join(", ")}, ${it.rooms.checkIn} → ${it.rooms.checkOut}.)`);
+    // So she knows what is on the screen when the guest says "that one" — and
+    // the PMS does not send the same cards twice (lib/sasani cardsOnScreen).
+    else if (it.kind === "rooms") {
+      const r = it.rooms;
+      push("assistant", `(Room cards shown for ${r.property ? r.property.slug + " " : ""}${r.checkIn} → ${r.checkOut}: `
+        + `${r.rooms.map(x => `${x.name} [${x.unit}] ${x.total} THB`).join("; ")}.)`);
+    }
   }
   while (turns.length && turns[0].role !== "user") turns.shift();
   return turns.slice(-16);
@@ -119,6 +149,7 @@ function toHistory(items: Item[]) {
 /** The chat's state, held by whoever shows the ask box so the box and the panel share it. */
 export function useSiteSasani() {
   const [enabled, setEnabled] = useState(false);
+  const [places, setPlaces] = useState<Place[]>([]);
   const [open, setOpenRaw] = useState(false);
   const [items, setItems] = useState<Item[]>([]);
   const [busy, setBusy] = useState(false);
@@ -132,7 +163,11 @@ export function useSiteSasani() {
   useEffect(() => {
     let live = true;
     fetch(`${ADMIN_API}/api/stay/sasani?property=${SITE_SCOPE}`)
-      .then(r => r.json()).then(j => { if (live) setEnabled(!!j?.enabled); })
+      .then(r => r.json()).then(j => {
+        if (!live) return;
+        setEnabled(!!j?.enabled);
+        if (Array.isArray(j?.places)) setPlaces(j.places.filter((p: Place) => p && typeof p.slug === "string"));
+      })
       .catch(() => { /* not reachable from this site yet: the box falls back to /book */ });
     try {
       const raw = sessionStorage.getItem(STORE);
@@ -185,7 +220,7 @@ export function useSiteSasani() {
       .finally(() => { clearTimeout(slowTimer); setBusy(false); setSlow(false); });
   }, [busy, setOpen]);
 
-  return { enabled, open, setOpen, items, busy, slow, send };
+  return { enabled, places, open, setOpen, items, busy, slow, send };
 }
 export type SiteSasani = ReturnType<typeof useSiteSasani>;
 
@@ -264,10 +299,16 @@ function Said({ text }: { text: string }) {
 const day = (iso: string, lang: Lang) =>
   new Date(iso + "T00:00:00Z").toLocaleDateString(lang === "th" ? "th-TH" : "en-GB", { timeZone: "UTC", weekday: "short", day: "numeric", month: "short" });
 
-function RoomRail({ rooms, lang, onBook }: { rooms: Rooms; lang: Lang; onBook: (name: string) => void }) {
+function RoomRail({ rooms, lang, onBook, named }: { rooms: Rooms; lang: Lang; onBook: (name: string) => void; named: boolean }) {
   const [view, setView] = useState<{ photos: string[]; i: number } | null>(null);
   return (
     <div className="s-in flex-none -mx-4">
+      {/* With two places in one chat, which one these cards are for. */}
+      {named && rooms.property && (
+        <div className="px-4 mb-1.5 text-[0.72rem] text-sann-text-lt">
+          <span className="font-medium text-sann-text">{rooms.property.name}</span> · {day(rooms.checkIn, lang)} → {day(rooms.checkOut, lang)}
+        </div>
+      )}
       <div className="s-rail flex gap-2.5 overflow-x-auto px-4 scroll-px-4 pb-1 snap-x snap-mandatory">
         {rooms.rooms.map(r => (
           <div key={r.unit} className="snap-start flex-none w-[232px] bg-white border border-sann-line rounded-2xl overflow-hidden">
@@ -289,7 +330,7 @@ function RoomRail({ rooms, lang, onBook }: { rooms: Rooms; lang: Lang; onBook: (
               </div>
               <button type="button" onClick={() => onBook(r.name)}
                 className="mt-2.5 w-full rounded-full bg-sann-red hover:bg-sann-red-dk text-white text-[0.8rem] font-medium py-2 transition-colors">
-                {T.book[lang]}
+                {r.kind === "whole" ? T.bookHouse[lang] : T.book[lang]}
               </button>
             </div>
           </div>
@@ -312,6 +353,53 @@ function RoomRail({ rooms, lang, onBook }: { rooms: Rooms; lang: Lang; onBook: (
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/** The site's own entry for a place the PMS names ("thungsao" → SANN Thungsao Hostel). */
+function siteEntry(slug: string) {
+  const key = slug.replace(/[^a-z0-9]/gi, "").toLowerCase();
+  return PROPERTIES.find(p => p.id.replace(/[^a-z0-9]/gi, "").toLowerCase().includes(key));
+}
+/** "/ bed / night" in Thai, as the hero's price card says it. */
+const unitIn = (unit: string, lang: Lang) =>
+  lang === "th" ? unit.replace(/bed/gi, "เตียง").replace(/night/gi, "คืน").replace(/house/gi, "หลัง") : unit;
+
+/**
+ * Her opening question, "which place?", answered with a tap: a card for each
+ * place she can book — photo, what it is, the lowest price — in the site's own
+ * order. Choosing one says so for the guest, in the PMS's name for it.
+ */
+function PlaceCards({ places, lang, busy, onPick }: { places: Place[]; lang: Lang; busy: boolean; onPick: (p: Place) => void }) {
+  const list = places
+    .map(p => ({ p, site: siteEntry(p.slug) }))
+    .sort((a, b) => (a.site ? PROPERTIES.indexOf(a.site) : 99) - (b.site ? PROPERTIES.indexOf(b.site) : 99));
+  return (
+    <div className="s-in flex-none grid grid-cols-2 gap-2">
+      {list.map(({ p, site }) => (
+        <div key={p.slug} className="bg-white border border-sann-line rounded-2xl overflow-hidden flex flex-col">
+          <div className="h-[96px] bg-[#E9DED2]">
+            {site?.images[0] && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={site.images[0]} alt="" loading="lazy" className="w-full h-full object-cover" />
+            )}
+          </div>
+          <div className="p-2.5 flex flex-col gap-1 flex-1">
+            <div className="text-[0.82rem] font-semibold text-sann-text leading-snug">{site?.name ?? p.name}</div>
+            <div className="text-[0.7rem] text-sann-text-lt leading-snug">{T.blurb[p.type === "hostel" ? "hostel" : "house"][lang]}</div>
+            {site && (
+              <div className="text-[0.7rem] text-sann-text-lt mt-auto pt-1">
+                {T.from[lang]} <span className="font-mono text-[0.85rem] font-medium text-sann-red">{site.price}</span> {unitIn(site.priceUnit, lang)}
+              </div>
+            )}
+            <button type="button" disabled={busy} onClick={() => onPick(p)}
+              className="mt-1.5 w-full rounded-full bg-sann-red hover:bg-sann-red-dk text-white text-[0.75rem] font-medium py-1.5 transition-colors disabled:opacity-50">
+              {T.choose[lang]}
+            </button>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -374,12 +462,13 @@ export function SasaniPanel({ s, lang }: { s: SiteSasani; lang: Lang }) {
       </div>
 
       <div ref={logRef} aria-live="polite" className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-4 flex flex-col gap-2.5 bg-[#F6EBDD]">
-        <Bubble bot><Said text={T.hi[lang]} /></Bubble>
+        <Bubble bot><Said text={(s.places.length > 1 ? T.hi : T.hi1)[lang]} /></Bubble>
+        {s.places.length > 1 && <PlaceCards places={s.places} lang={lang} busy={s.busy} onPick={p => s.send(fill(T.chooseMsg[lang], { name: p.name }), lang)} />}
         {s.items.map((it, i) => {
           if (it.kind === "me") return <Bubble key={i}>{it.text}</Bubble>;
           if (it.kind === "bot") return <Bubble key={i} bot><Said text={it.text} /></Bubble>;
           if (it.kind === "card") return <BookingCard key={i} c={it.card} lang={lang} />;
-          if (it.kind === "rooms") return <RoomRail key={i} rooms={it.rooms} lang={lang} onBook={name => s.send(fill(T.bookMsg[lang], { name }), lang)} />;
+          if (it.kind === "rooms") return <RoomRail key={i} rooms={it.rooms} lang={lang} named={s.places.length > 1} onBook={name => s.send(fill(T.bookMsg[lang], { name }), lang)} />;
           const human = it.code === "busy" || it.code === "off" || it.code === "refused";
           return (
             <Bubble key={i} bot err>
