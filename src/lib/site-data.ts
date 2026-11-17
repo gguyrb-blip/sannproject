@@ -183,6 +183,9 @@ export type Testimonial = {
   rating: number;
   via: string;
   property?: ReviewProperty;
+  /** The scale `rating` is on: 5 (stars, the default) or 10 (Trip.com,
+   *  Booking.com). Shown as the platform gave it, never converted. */
+  outOf?: 5 | 10;
 };
 
 export const TESTIMONIALS: Testimonial[] = [
@@ -221,6 +224,46 @@ export const TESTIMONIALS: Testimonial[] = [
     rating: 5,
     via: "Airbnb",
     property: "hatyai",
+  },
+  // SANN Thungsao Hostel — Trip.com reviews the owner chose to republish
+  // (17 Nov 2026), as Trip.com shows them in English. Scores on Trip.com's
+  // own scale of 10. Guests are credited by first name or the name they
+  // posted under; "Anonymous" is how Trip.com lists those who gave none.
+  {
+    quote: "Great value for money, very clean rooms, cold air conditioning, and free drinking water. I loved it, and the housekeeping staff were very kind.",
+    author: "Anonymous", location: "Dorm bed · Nov 2026", rating: 9.5, outOf: 10, via: "Trip.com", property: "thungsao",
+  },
+  {
+    quote: "I loved both Hat Yai and the hostel so much that I decided to extend my stay. The staff accommodated my request so I didn't have to change beds, which I really appreciated.",
+    author: "nick29", location: "Dorm bed · Nov 2026", rating: 9.5, outOf: 10, via: "Trip.com", property: "thungsao",
+  },
+  {
+    quote: "Self check-in, close to Central Hatyai, and close to food spots.",
+    author: "Shumet", location: "Dorm bed · Oct 2026", rating: 10, outOf: 10, via: "Trip.com", property: "thungsao",
+  },
+  {
+    quote: "Easy check-in with staff available to help all the time. The housekeeper was very polite and extremely friendly, making it feel just like home. I was here for work so I booked 3 nights, and the sleep was so, so comfortable!",
+    author: "Anonymous", location: "Dorm bed · Oct 2026", rating: 9.5, outOf: 10, via: "Trip.com", property: "thungsao",
+  },
+  {
+    quote: "Looking for a budget-friendly shared room, perfect for solo travelers or groups? Check out this style of accommodation! 😊 The room features bunk beds with partitioned sleeping areas, privacy curtains, and includes pillows, blankets, and towels. The interior is decorated in warm, clean colors. There are lockers for storing belongings and a central aisle for easy access.",
+    author: "HopJai Pai Tiew", location: "Dorm bed · Oct 2026", rating: 10, outOf: 10, via: "Trip.com", property: "thungsao",
+  },
+  {
+    quote: "Everything is fully equipped, and the environment, restrooms, and dining area are very clean. Shower gel is provided, and with the air conditioning, it's all very comfortable. The best choice for solo travelers! 😊😊",
+    author: "Boon Sheng", location: "Dorm bed · Oct 2026", rating: 10, outOf: 10, via: "Trip.com", property: "thungsao",
+  },
+  {
+    quote: "As a stopover, my friend and I stayed at Sann Thungsao for a night. We appreciate the convenience of the self check-in, which gave us a key for our locker. When I opened my locker, a clean blanket and pillow was there for my bed. We are very impressed by how everything was organized.",
+    author: "Anonymous", location: "Dorm bed · Sep 2026", rating: 10, outOf: 10, via: "Trip.com", property: "thungsao",
+  },
+  {
+    quote: "This hostel was booked at the last moment, but it was easy to book because it's self check in. I scanned and provided my information. The system provided my key code and the code for the door. I like to self check in since the Wi-Fi worked well.",
+    author: "Anonymous", location: "Dorm bed · Oct 2026", rating: 9.5, outOf: 10, via: "Trip.com", property: "thungsao",
+  },
+  {
+    quote: "Very good, they even have online check-in service, and it's close to the mall and transportation.",
+    author: "Kong", location: "Dorm bed · Aug 2026", rating: 10, outOf: 10, via: "Trip.com", property: "thungsao",
   },
 ];
 

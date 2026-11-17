@@ -82,6 +82,21 @@ function platformOf(via: string): ReviewPlatform | null {
   return v.includes("airbnb") ? "airbnb" : v.includes("booking") ? "booking" : v.includes("trip") ? "trip" : v.includes("google") ? "google" : null;
 }
 
+/**
+ * The score as the platform gave it: stars and "4.0" for a five-point one,
+ * stars and "9.5/10" for Trip.com's ten — the stars at half the ten, so a
+ * row of both scales still reads at a glance.
+ */
+function Rating({ t }: { t: Testimonial }) {
+  const ten = t.outOf === 10;
+  return (
+    <>
+      <Stars n={ten ? t.rating / 2 : t.rating} />
+      <span className="font-mono text-sann-text-lt">{ten ? `${t.rating}/10` : t.rating.toFixed(1)}</span>
+    </>
+  );
+}
+
 function QuoteCard({ t, lang, onOpen }: { t: Testimonial; lang: Lang; onOpen: (t: Testimonial) => void }) {
   const pf = platformOf(t.via);
   // "Read more" only when the card really cuts the review off — measured,
@@ -101,7 +116,7 @@ function QuoteCard({ t, lang, onOpen }: { t: Testimonial; lang: Lang; onOpen: (t
   }, [t.quote]);
   return (
     <figure className="rv-card flex w-[300px] sm:w-[380px] flex-none flex-col gap-3 rounded-sann-lg bg-sann-card p-5 sm:p-6 text-sann-text shadow-sann-md">
-      <div className="flex items-center gap-2 text-sm"><Stars n={t.rating} /><span className="font-mono text-sann-text-lt">{t.rating.toFixed(1)}</span></div>
+      <div className="flex items-center gap-2 text-sm"><Rating t={t} /></div>
       <blockquote ref={textRef} className="m-0 font-display text-[1.06rem] leading-[1.45] rv-clamp">&ldquo;{t.quote}&rdquo;</blockquote>
       {cut && (
         <button type="button" onClick={() => onOpen(t)}
@@ -139,7 +154,7 @@ function ReviewWindow({ t, lang, onClose }: { t: Testimonial; lang: Lang; onClos
         <button type="button" onClick={onClose} aria-label={T.close[lang]}
           className="absolute top-3 right-3 w-9 h-9 rounded-full border border-sann-line bg-sann-card text-sann-text">✕</button>
         <div className="text-xs text-sann-text-lt mb-2">{place.name}</div>
-        <div className="flex items-center gap-2 text-sm mb-3"><Stars n={t.rating} /><span className="font-mono text-sann-text-lt">{t.rating.toFixed(1)}</span></div>
+        <div className="flex items-center gap-2 text-sm mb-3"><Rating t={t} /></div>
         <blockquote className="m-0 font-display text-[1.15rem] leading-[1.5]">&ldquo;{t.quote}&rdquo;</blockquote>
         <figcaption className="mt-5 flex items-center gap-3">
           <span className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-sann-terracotta-soft font-medium text-sann-red">
