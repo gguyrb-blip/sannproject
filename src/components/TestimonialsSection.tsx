@@ -82,16 +82,28 @@ function platformOf(via: string): ReviewPlatform | null {
   return v.includes("airbnb") ? "airbnb" : v.includes("booking") ? "booking" : v.includes("trip") ? "trip" : v.includes("google") ? "google" : null;
 }
 
-/** Long enough to be cut off in a card: the card then offers the whole of it. */
-const isLong = (q: string) => q.length > 230;
-
 function QuoteCard({ t, lang, onOpen }: { t: Testimonial; lang: Lang; onOpen: (t: Testimonial) => void }) {
   const pf = platformOf(t.via);
+  // "Read more" only when the card really cuts the review off — measured,
+  // not guessed from its length: how much fits depends on the screen and
+  // the font, and a button that opens the same words again is a let-down.
+  const textRef = useRef<HTMLQuoteElement>(null);
+  const [cut, setCut] = useState(false);
+  useEffect(() => {
+    const el = textRef.current;
+    if (!el) return;
+    const check = () => setCut(el.scrollHeight > el.clientHeight + 1);
+    check();
+    document.fonts?.ready.then(check).catch(() => {});
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [t.quote]);
   return (
     <figure className="rv-card flex w-[300px] sm:w-[380px] flex-none flex-col gap-3 rounded-sann-lg bg-sann-card p-5 sm:p-6 text-sann-text shadow-sann-md">
       <div className="flex items-center gap-2 text-sm"><Stars n={t.rating} /><span className="font-mono text-sann-text-lt">{t.rating.toFixed(1)}</span></div>
-      <blockquote className="m-0 font-display text-[1.25rem] leading-snug rv-clamp">&ldquo;{t.quote}&rdquo;</blockquote>
-      {isLong(t.quote) && (
+      <blockquote ref={textRef} className="m-0 font-display text-[1.06rem] leading-[1.45] rv-clamp">&ldquo;{t.quote}&rdquo;</blockquote>
+      {cut && (
         <button type="button" onClick={() => onOpen(t)}
           className="self-start -mt-1 text-sm font-medium text-sann-red hover:underline">
           {T.more[lang]}
@@ -128,7 +140,7 @@ function ReviewWindow({ t, lang, onClose }: { t: Testimonial; lang: Lang; onClos
           className="absolute top-3 right-3 w-9 h-9 rounded-full border border-sann-line bg-sann-card text-sann-text">✕</button>
         <div className="text-xs text-sann-text-lt mb-2">{place.name}</div>
         <div className="flex items-center gap-2 text-sm mb-3"><Stars n={t.rating} /><span className="font-mono text-sann-text-lt">{t.rating.toFixed(1)}</span></div>
-        <blockquote className="m-0 font-display text-[1.35rem] leading-snug">&ldquo;{t.quote}&rdquo;</blockquote>
+        <blockquote className="m-0 font-display text-[1.15rem] leading-[1.5]">&ldquo;{t.quote}&rdquo;</blockquote>
         <figcaption className="mt-5 flex items-center gap-3">
           <span className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-sann-terracotta-soft font-medium text-sann-red">
             {t.author.slice(0, 1).toUpperCase()}
@@ -314,7 +326,7 @@ export default function TestimonialsSection() {
         .rv-row.rv-dragging{cursor:grabbing;user-select:none}
         .rv-track{display:flex;width:max-content}
         .rv-cell{padding-right:16px;display:flex}
-        .rv-clamp{display:-webkit-box;-webkit-line-clamp:7;-webkit-box-orient:vertical;overflow:hidden}
+        .rv-clamp{display:-webkit-box;-webkit-line-clamp:8;-webkit-box-orient:vertical;overflow:hidden}
       `}</style>
       <div className="max-w-7xl mx-auto">
         <header className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5 mb-10">
