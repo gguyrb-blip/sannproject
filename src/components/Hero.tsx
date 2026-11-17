@@ -41,7 +41,7 @@ const LINES: Record<SiteLang, [string, string][]> = {
 const T = {
   eyebrow: { en: "Hat Yai · Thailand · est. 2026", th: "หาดใหญ่ · สงขลา · ตั้งแต่ 2569" },
   h1: { en: "Where every stay feels like home.", th: "ที่พักในหาดใหญ่ ที่อยู่แล้วเหมือนบ้าน" },
-  ph: { en: "Which dates? Sasani can check what’s free and book it for you", th: "สนใจเข้าพักวันไหนคะ ให้ซาซานิจองให้เลยไหมคะ" },
+  ph: { en: "Which dates? Sasani will check and book it for you", th: "สนใจเข้าพักวันไหนคะ ให้ซาซานิจองให้เลยไหมคะ" },
   chips: {
     en: ["Is the house free this weekend?", "A dorm bed tonight", "Parking?"],
     th: ["บ้านว่างเสาร์-อาทิตย์นี้ไหม", "เตียงดอร์มคืนนี้", "จอดรถได้ไหม"],

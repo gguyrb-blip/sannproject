@@ -1,5 +1,6 @@
 "use client";
 
+import { useSiteLang } from "@/lib/site-lang";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PhotoStrip, PhotoViewer } from "@/components/RoomGallery";
 
@@ -194,7 +195,10 @@ const fmtDate = (iso: string, l: Lang) => {
 };
 
 export default function BookingEngine() {
-  const [lang, setLang] = useState<Lang>("th");
+  // The site's one language (lib/site-lang): ?lang=, the guest's own choice,
+  // otherwise English — and the header's switch and this page's own TH / EN
+  // move it together.
+  const [lang, setLanguage] = useSiteLang();
   const tr = T[lang];
   const [step, setStep] = useState<Step>("property");
   const [property, setProperty] = useState<PropertyOption | null>(null);
@@ -238,10 +242,6 @@ export default function BookingEngine() {
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState<{ refs: string[]; total: number; nights: number; summary: string | null } | null>(null);
 
-  useEffect(() => {
-    const saved = (typeof window !== "undefined" && localStorage.getItem("book_lang")) as Lang | null;
-    if (saved === "en" || saved === "th") setLang(saved);
-  }, []);
 
   useEffect(() => {
     fetch(`${ADMIN_API}/api/public/pay-link`)
@@ -276,7 +276,6 @@ export default function BookingEngine() {
     const match = PROPERTIES.find((p) => p.slug === slug);
     if (match) { setProperty(match); setStep("dates"); }
   }, []);
-  const setLanguage = (l: Lang) => { setLang(l); try { localStorage.setItem("book_lang", l); } catch {} };
 
   // Blocked dates only make sense for a whole-property stay — for the hostel a
   // single booked bed must NOT grey out the date.

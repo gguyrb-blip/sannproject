@@ -17,6 +17,7 @@
 // twice.
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CONTACT, PROPERTIES } from "@/lib/site-data";
+import { readSiteLang } from "@/lib/site-lang";
 
 export const ADMIN_API = process.env.NEXT_PUBLIC_ADMIN_API || "https://app.sannstay.com";
 /** Both properties: the site sells the house and the hostel. */
@@ -25,15 +26,9 @@ const STORE = "sann_site_sasani_v1";
 
 export type Lang = "th" | "en";
 
-/** The guest's language: ?lang=, then the one they chose on /book, then the browser's. */
+/** The guest's language — the site's one switch (lib/site-lang). */
 export function pickLang(): Lang {
-  try {
-    const q = new URLSearchParams(window.location.search).get("lang");
-    if (q === "th" || q === "en") return q;
-    const saved = localStorage.getItem("book_lang");
-    if (saved === "th" || saved === "en") return saved;
-  } catch { /* private mode */ }
-  return navigator.language?.toLowerCase().startsWith("th") ? "th" : "en";
+  return readSiteLang();
 }
 
 // ── What the PMS sends (lib/sasani on app.sannstay.com) ─────────────────────

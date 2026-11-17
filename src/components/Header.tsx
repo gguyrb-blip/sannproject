@@ -15,13 +15,17 @@ const NAV: { th: string; en: string; href: string }[] = [
 ];
 const BOOK = { th: "จองเลย", en: "Book Now" };
 
-/** ไทย | EN — what used to be a label reading "EN" that switched nothing. */
+/**
+ * EN | ไทย — on the bar itself at every width, never folded into the ☰ menu:
+ * the site opens in English, so a Thai guest must find the way to Thai at a
+ * glance. Each button is a comfortable thumb-sized target.
+ */
 function LangSwitch({ lang, set, className = "" }: { lang: SiteLang; set: (l: SiteLang) => void; className?: string }) {
   return (
-    <span role="group" aria-label="Language" className={`inline-flex items-center rounded-full border border-sann-line p-0.5 text-xs ${className}`}>
-      {(["th", "en"] as SiteLang[]).map(l => (
-        <button key={l} type="button" onClick={() => set(l)} aria-pressed={lang === l}
-          className={`rounded-full px-2.5 py-1 transition-colors ${lang === l ? "bg-sann-text text-white" : "text-sann-text-lt hover:text-sann-text"}`}>
+    <span role="group" aria-label="Language / ภาษา" className={`inline-flex items-center rounded-full border border-sann-line bg-white p-0.5 text-[0.8rem] shadow-sann-sm ${className}`}>
+      {(["en", "th"] as SiteLang[]).map(l => (
+        <button key={l} type="button" onClick={() => set(l)} aria-pressed={lang === l} lang={l}
+          className={`min-w-[2.6rem] rounded-full px-3 py-1.5 font-medium transition-colors ${lang === l ? "bg-sann-text text-white" : "text-sann-text-lt hover:text-sann-text"}`}>
           {l === "th" ? "ไทย" : "EN"}
         </button>
       ))}
@@ -48,7 +52,7 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-2.5">
-          <LangSwitch lang={lang} set={setLang} className="hidden sm:inline-flex" />
+          <LangSwitch lang={lang} set={setLang} />
           <Link
             href="/book"
             className="hidden sm:inline-flex items-center bg-sann-text text-white text-[0.8rem] font-medium px-4 py-2.5 rounded-xl hover:bg-sann-red transition-colors"
@@ -74,9 +78,6 @@ export default function Header() {
               {n[lang]}
             </Link>
           ))}
-          <div className="flex items-center justify-between pt-3">
-            <LangSwitch lang={lang} set={setLang} />
-          </div>
           <Link href="/book" onClick={() => setOpen(false)} className="mt-3 mb-1 text-center bg-sann-red text-white font-semibold py-3 rounded-xl">
             {BOOK[lang]}
           </Link>

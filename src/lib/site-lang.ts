@@ -7,7 +7,9 @@
 // lands on a Thai home page, and the other way round.
 //
 // Order of say: ?lang= in the address (a link shared in Thai stays Thai), then
-// what the guest chose before, then their browser's language.
+// what the guest chose before with the switch — and otherwise English. The
+// site is English first (owner, 17 Nov 2026): a Thai phone no longer turns it
+// Thai by itself; the switch in the header, always in sight, does.
 import { useEffect, useState } from "react";
 
 export type SiteLang = "th" | "en";
@@ -22,7 +24,7 @@ export function readSiteLang(): SiteLang {
     const saved = localStorage.getItem(KEY);
     if (saved === "th" || saved === "en") return saved;
   } catch { /* private mode */ }
-  return navigator.language?.toLowerCase().startsWith("th") ? "th" : "en";
+  return "en";
 }
 
 export function setSiteLang(lang: SiteLang) {
