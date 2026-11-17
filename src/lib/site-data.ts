@@ -193,6 +193,7 @@ export const TESTIMONIALS: Testimonial[] = [
     location: "Perak, Malaysia",
     rating: 5,
     via: "Airbnb",
+    property: "hatyai",
   },
   {
     quote:
@@ -201,6 +202,7 @@ export const TESTIMONIALS: Testimonial[] = [
     location: "Selangor, Malaysia",
     rating: 4,
     via: "Airbnb",
+    property: "hatyai",
   },
   {
     quote:
@@ -209,6 +211,7 @@ export const TESTIMONIALS: Testimonial[] = [
     location: "Singapore",
     rating: 5,
     via: "Airbnb",
+    property: "hatyai",
   },
   {
     quote:
@@ -217,6 +220,7 @@ export const TESTIMONIALS: Testimonial[] = [
     location: "Teluk Intan, Malaysia",
     rating: 5,
     via: "Airbnb",
+    property: "hatyai",
   },
 ];
 

@@ -1,15 +1,16 @@
 "use client";
-// TestimonialsSection — "what guests say", as a dark band on the home page.
+// TestimonialsSection — "what guests say" on the home page.
 //
-// A card for each property up top, then two rows that drift past on their
-// own: guests' own words in one, and in the other what every platform scores
-// us — Booking.com, Trip.com, Airbnb and Google, for both places — each card
-// a link to the reviews where they were written.
+// A card for each property up top, with every platform's score (each a link
+// to where it was given). Under them, one row of guests' own words per place —
+// the house, then the hostel — drifting past on their own. A long review opens
+// whole in a window here: nobody has to leave the site to read it.
 //
 // The scores are the platforms' own numbers (lib/site-data REVIEW_SCORES, with
-// the date they were read). Nothing here is rounded up or picked from the best
-// platform only: a guest who clicks through finds what this page said.
-import { useEffect, useMemo, useRef } from "react";
+// the date they were read). The words are TESTIMONIALS, each tagged with the
+// place it is about; a place with none yet shows no row rather than an empty
+// one — and nothing here is ever written for a guest.
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   PROPERTIES, REVIEW_SCORES, REVIEW_SCORES_CHECKED, TESTIMONIALS,
   type PlatformScore, type ReviewPlatform, type ReviewProperty, type Testimonial,
@@ -47,8 +48,10 @@ const T = {
    *  would otherwise break "มา / พัก" on a phone. */
   title: { th: ["รีวิวจริง ", "จากแขกที่", "มาพัก"], en: ["Real reviews from guests ", "who ", "stayed"] },
   reviews: { th: "รีวิว", en: "reviews" },
-  read: { th: "อ่านรีวิว", en: "Read the reviews" },
   on: { th: "บน", en: "on" },
+  more: { th: "อ่านต่อ", en: "Read more" },
+  close: { th: "ปิด", en: "Close" },
+  review: { th: "รีวิวจากแขก", en: "Guest review" },
 } as const;
 
 function fmtScore(s: PlatformScore) {
@@ -73,54 +76,71 @@ function Stars({ n }: { n: number }) {
   );
 }
 
-function QuoteCard({ t, lang }: { t: Testimonial; lang: Lang }) {
+/** "Airbnb" → its mark, so a quote shows where it was written. */
+function platformOf(via: string): ReviewPlatform | null {
+  const v = via.toLowerCase();
+  return v.includes("airbnb") ? "airbnb" : v.includes("booking") ? "booking" : v.includes("trip") ? "trip" : v.includes("google") ? "google" : null;
+}
+
+/** Long enough to be cut off in a card: the card then offers the whole of it. */
+const isLong = (q: string) => q.length > 230;
+
+function QuoteCard({ t, lang, onOpen }: { t: Testimonial; lang: Lang; onOpen: (t: Testimonial) => void }) {
+  const pf = platformOf(t.via);
   return (
-    <figure className="rv-card flex w-[300px] sm:w-[340px] flex-none flex-col gap-3 rounded-sann-lg bg-sann-card p-5 sm:p-6 text-sann-text shadow-sann-md">
+    <figure className="rv-card flex w-[300px] sm:w-[380px] flex-none flex-col gap-3 rounded-sann-lg bg-sann-card p-5 sm:p-6 text-sann-text shadow-sann-md">
       <div className="flex items-center gap-2 text-sm"><Stars n={t.rating} /><span className="font-mono text-sann-text-lt">{t.rating.toFixed(1)}</span></div>
-      <blockquote className="m-0 font-display text-[1.3rem] leading-snug rv-clamp">&ldquo;{t.quote}&rdquo;</blockquote>
+      <blockquote className="m-0 font-display text-[1.25rem] leading-snug rv-clamp">&ldquo;{t.quote}&rdquo;</blockquote>
+      {isLong(t.quote) && (
+        <button type="button" onClick={() => onOpen(t)}
+          className="self-start -mt-1 text-sm font-medium text-sann-red hover:underline">
+          {T.more[lang]}
+        </button>
+      )}
       <figcaption className="mt-auto flex items-center gap-3 pt-1">
         <span className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-sann-terracotta-soft font-medium text-sann-red">
           {t.author.slice(0, 1).toUpperCase()}
         </span>
-        <span className="min-w-0">
+        <span className="min-w-0 flex-1">
           <span className="block text-sm font-medium leading-tight">{t.author}</span>
-          <span className="block truncate text-xs text-sann-text-lt">{t.location} · {t.via}</span>
+          <span className="block truncate text-xs text-sann-text-lt">{t.location}</span>
         </span>
+        {pf && <span className="flex items-center gap-1.5 text-xs text-sann-text-lt"><PlatformMark p={pf} size={18} />{PLATFORM[pf].name}</span>}
       </figcaption>
-      <span className="sr-only">{lang === "th" ? "รีวิวจากแขก" : "Guest review"}</span>
+      <span className="sr-only">{T.review[lang]}</span>
     </figure>
   );
 }
 
-function ScoreCard({ s, lang }: { s: PlatformScore; lang: Lang }) {
-  const m = PLATFORM[s.platform];
+/** The whole review, on this site. Closes on ✕, Esc or a tap outside. */
+function ReviewWindow({ t, lang, onClose }: { t: Testimonial; lang: Lang; onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  const pf = platformOf(t.via);
+  const place = PROP[t.property ?? "hatyai"];
   return (
-    <a href={s.url} target="_blank" rel="noopener noreferrer"
-      className="rv-card flex w-[260px] sm:w-[280px] flex-none flex-col gap-3 rounded-sann-lg bg-sann-card p-5 sm:p-6 text-sann-text no-underline shadow-sann-md transition-shadow hover:shadow-sann-lg">
-      <div className="flex items-center gap-2.5">
-        <PlatformMark p={s.platform} size={26} />
-        <span className="min-w-0">
-          <span className="block text-sm font-medium leading-tight">{m.name}</span>
-          <span className="block truncate text-xs text-sann-text-lt">{PROP[s.property].name}</span>
-        </span>
-      </div>
-      {/* Numbers in the site's mono, like the prices; the platform's own colour
-          stays on its little mark only. */}
-      <div className="flex items-baseline gap-1.5">
-        <span className="font-mono text-[2.3rem] font-medium leading-none text-sann-text">{fmtScore(s)}</span>
-        <span className="font-mono text-sm text-sann-text-lt">/{s.outOf}</span>
-        {s.label && <span className="ml-1 text-sm text-sann-red">{s.label}</span>}
-      </div>
-      <div className="text-sm text-sann-text-lt">{s.count} {T.reviews[lang]}</div>
-      {s.detail && (
-        <div className="flex flex-wrap gap-1.5">
-          {s.detail.map(d => (
-            <span key={d.en} className="rounded-full bg-sann-bg2 px-2.5 py-1 text-[0.72rem] text-sann-text">{lang === "th" ? d.th : d.en} {d.v}</span>
-          ))}
-        </div>
-      )}
-      <span className="mt-auto text-sm font-medium text-sann-red">{T.read[lang]} →</span>
-    </a>
+    <div className="fixed inset-0 z-[130] bg-[rgba(27,23,20,.55)] grid place-items-center p-4" onClick={onClose} role="dialog" aria-modal="true" aria-label={T.review[lang]}>
+      <figure className="relative w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-sann-xl bg-sann-card p-6 sm:p-8 text-sann-text shadow-sann-lg m-0" onClick={e => e.stopPropagation()}>
+        <button type="button" onClick={onClose} aria-label={T.close[lang]}
+          className="absolute top-3 right-3 w-9 h-9 rounded-full border border-sann-line bg-sann-card text-sann-text">✕</button>
+        <div className="text-xs text-sann-text-lt mb-2">{place.name}</div>
+        <div className="flex items-center gap-2 text-sm mb-3"><Stars n={t.rating} /><span className="font-mono text-sann-text-lt">{t.rating.toFixed(1)}</span></div>
+        <blockquote className="m-0 font-display text-[1.35rem] leading-snug">&ldquo;{t.quote}&rdquo;</blockquote>
+        <figcaption className="mt-5 flex items-center gap-3">
+          <span className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-sann-terracotta-soft font-medium text-sann-red">
+            {t.author.slice(0, 1).toUpperCase()}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-medium leading-tight">{t.author}</span>
+            <span className="block text-xs text-sann-text-lt">{t.location}</span>
+          </span>
+          {pf && <span className="flex items-center gap-1.5 text-xs text-sann-text-lt"><PlatformMark p={pf} size={18} />{PLATFORM[pf].name}</span>}
+        </figcaption>
+      </figure>
+    </div>
   );
 }
 
@@ -245,7 +265,9 @@ function Row({ children, reverse, speed = 30 }: { children: React.ReactNode[]; r
     <div ref={ref} className="rv-row">
       <div className="rv-track">
         {children.map((c, i) => <div key={`a${i}`} className="rv-cell">{c}</div>)}
-        {children.map((c, i) => <div key={`b${i}`} className="rv-cell" aria-hidden="true">{c}</div>)}
+        {/* The copy that makes the loop: hidden from screen readers, and inert
+            so its "read more" buttons are not tabbed to twice. */}
+        {children.map((c, i) => <div key={`b${i}`} className="rv-cell" aria-hidden="true" inert>{c}</div>)}
       </div>
     </div>
   );
@@ -261,13 +283,16 @@ export default function TestimonialsSection() {
   const total = REVIEW_SCORES.reduce((n, s) => n + s.count, 0);
   const checked = new Date(REVIEW_SCORES_CHECKED + "T00:00:00").toLocaleDateString(lang === "th" ? "th-TH" : "en-GB", { day: "numeric", month: "short", year: "numeric" });
 
-  // A row of four quotes would show the same guest twice on a wide screen, so
-  // short lists are repeated before they are doubled for the loop.
-  const quotes = useMemo(() => {
-    const q = [...TESTIMONIALS];
-    while (q.length && q.length < 6) q.push(...TESTIMONIALS);
-    return q;
-  }, []);
+  // One row per place, its guests' words only. A short list is repeated
+  // before the row doubles it for the loop, so a wide screen is never half
+  // empty; a place with no quotes yet has no row at all.
+  const rows = useMemo(() => (["hatyai", "thungsao"] as ReviewProperty[]).map(p => {
+    const own = TESTIMONIALS.filter(t => (t.property ?? "hatyai") === p);
+    const q = [...own];
+    while (q.length && q.length < 6) q.push(...own);
+    return { p, quotes: q };
+  }).filter(r => r.quotes.length), []);
+  const [open, setOpen] = useState<Testimonial | null>(null);
 
   const best = (p: ReviewProperty) => REVIEW_SCORES
     .filter(s => s.property === p)
@@ -289,7 +314,7 @@ export default function TestimonialsSection() {
         .rv-row.rv-dragging{cursor:grabbing;user-select:none}
         .rv-track{display:flex;width:max-content}
         .rv-cell{padding-right:16px;display:flex}
-        .rv-clamp{display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+        .rv-clamp{display:-webkit-box;-webkit-line-clamp:7;-webkit-box-orient:vertical;overflow:hidden}
       `}</style>
       <div className="max-w-7xl mx-auto">
         <header className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5 mb-10">
@@ -339,15 +364,30 @@ export default function TestimonialsSection() {
           })}
         </div>
 
-        <div className="flex flex-col gap-2">
-          <Row speed={32}>
-            {quotes.map((t, i) => <QuoteCard key={i} t={t} lang={lang} />)}
-          </Row>
-          <Row reverse speed={28}>
-            {REVIEW_SCORES.map(s => <ScoreCard key={`${s.platform}-${s.property}`} s={s} lang={lang} />)}
-          </Row>
+        <div className="flex flex-col gap-4">
+          {rows.map(({ p, quotes }, ri) => {
+            const b = best(p);
+            return (
+              <div key={p}>
+                {/* Whose words these are: the house's row, then the hostel's. */}
+                <div className="flex items-baseline gap-2 mb-1 px-1 text-sm">
+                  <span className="font-display text-xl text-sann-text">{PROP[p].name}</span>
+                  {b && (
+                    <span className="text-sann-text-lt">
+                      <span className="font-mono text-sann-text">{fmtScore(b)}</span>
+                      <span className="text-sann-red">{b.outOf === 5 ? " ★" : `/${b.outOf}`}</span> {T.on[lang]} {PLATFORM[b.platform].name}
+                    </span>
+                  )}
+                </div>
+                <Row reverse={ri % 2 === 1} speed={ri % 2 ? 28 : 32}>
+                  {quotes.map((t, i) => <QuoteCard key={i} t={t} lang={lang} onOpen={setOpen} />)}
+                </Row>
+              </div>
+            );
+          })}
         </div>
       </div>
+      {open && <ReviewWindow t={open} lang={lang} onClose={() => setOpen(null)} />}
     </section>
   );
 }
