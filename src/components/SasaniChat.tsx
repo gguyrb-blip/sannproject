@@ -310,16 +310,21 @@ function RoomRail({ rooms, lang, onBook, named }: { rooms: Rooms; lang: Lang; on
         </div>
       )}
       <div className="s-rail flex gap-2.5 overflow-x-auto px-4 scroll-px-4 pb-1 snap-x snap-mandatory">
-        {rooms.rooms.map(r => (
+        {rooms.rooms.map(r => {
+          // The house's record in the PMS has no photos of its own yet; the
+          // website's photos of it are the same house, so they stand in.
+          const photos = r.photos.length ? r.photos
+            : r.kind === "whole" && rooms.property ? siteEntry(rooms.property.slug)?.images ?? [] : [];
+          return (
           <div key={r.unit} className="snap-start flex-none w-[232px] bg-white border border-sann-line rounded-2xl overflow-hidden">
-            <button type="button" onClick={() => r.photos.length && setView({ photos: r.photos, i: 0 })}
+            <button type="button" onClick={() => photos.length && setView({ photos, i: 0 })}
               className="relative block w-full h-[132px] bg-[#E9DED2]" aria-label={r.name}>
-              {r.photos[0] && (
+              {photos[0] && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={r.photos[0]} alt="" loading="lazy" className="w-full h-full object-cover" />
+                <img src={photos[0]} alt="" loading="lazy" className="w-full h-full object-cover" />
               )}
               {r.maleOnly && <span className="absolute top-2 left-2 rounded-full bg-white px-2 py-0.5 text-[0.68rem] font-medium text-sann-text">{T.maleOnly[lang]}</span>}
-              {r.photos.length > 1 && <span className="absolute top-2 right-2 rounded-full bg-black/55 px-2 py-0.5 text-[0.68rem] text-white">1/{r.photos.length}</span>}
+              {photos.length > 1 && <span className="absolute top-2 right-2 rounded-full bg-black/55 px-2 py-0.5 text-[0.68rem] text-white">1/{photos.length}</span>}
             </button>
             <div className="p-3 text-left">
               <div className="text-[0.9rem] font-semibold text-sann-text leading-snug">{r.name}</div>
@@ -334,7 +339,8 @@ function RoomRail({ rooms, lang, onBook, named }: { rooms: Rooms; lang: Lang; on
               </button>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
       {view && (
         <div className="fixed inset-0 z-[120] bg-black/90 flex flex-col" onClick={() => setView(null)} role="dialog" aria-modal="true">

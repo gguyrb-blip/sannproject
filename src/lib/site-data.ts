@@ -241,7 +241,10 @@ export const FAQS = [
   },
   {
     q: "Is there parking available?",
-    a: "Street parking is available. We have one reserved space in front of the house, with additional parking along the nearby street when available. Please ask us for parking guidance before arrival.",
+    // The house's facts as the check-in form and Stay Pass give them (kiosk-app
+    // lib/hatyai-parking): the space is in a lot about 200 m away, not at the
+    // door. Where exactly, and its key, come with the Stay Pass after check-in.
+    a: "Sann Stay Hatyai: your stay includes one reserved parking space, in a lot about 200 m from the house. Need room for another car? Add it on the online check-in form — THB 300 per car per night. SANN Thungsao Hostel: parking for 2 cars and 10 motorbikes.",
   },
   {
     q: "Is the WiFi fast enough for working?",
