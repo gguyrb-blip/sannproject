@@ -79,8 +79,13 @@ const T = {
   ph: { th: "พิมพ์ข้อความถึงซาซานิ…", en: "Message Sasani…" },
   send: { th: "ส่ง", en: "Send" },
   close: { th: "ปิดแชท", en: "Close chat" },
-  typing: { th: "ซาซานิกำลังพิมพ์…", en: "Sasani is typing…" },
-  slow: { th: "กำลังเช็คให้อยู่ค่ะ อีกสักครู่…", en: "Still checking — one moment…" },
+  // What she is doing while the guest waits (see doingFor) — said, not a row
+  // of dots: the owner asked that she always tell the guest.
+  read: { th: "ซาซานิกำลังอ่านข้อความของท่านค่ะ…", en: "Reading your message…" },
+  rooms: { th: "กำลังเช็คที่ว่างและราคาให้ค่ะ…", en: "Checking availability and prices for you…" },
+  making: { th: "กำลังสร้างการจองให้ค่ะ…", en: "Making your booking…" },
+  answer: { th: "กำลังหาคำตอบให้ค่ะ…", en: "Finding the answer for you…" },
+  slowTail: { th: " อีกสักครู่นะคะ", en: " — one moment" },
   foot: {
     th: "ซาซานิเป็น AI อาจตอบผิดได้ — ราคาและการจองมาจากระบบของเราโดยตรง",
     en: "Sasani is an AI and can make mistakes — prices and bookings come straight from our system.",
@@ -149,6 +154,7 @@ export function useSiteSasani() {
   const [items, setItems] = useState<Item[]>([]);
   const [busy, setBusy] = useState(false);
   const [slow, setSlow] = useState(false);
+  const [doing, setDoing] = useState<Doing>("read");
   const loaded = useRef(false);
   /** The messages as of now, for send() — read outside a state updater, which
    *  React may run twice and would then post the message twice. */
@@ -186,10 +192,15 @@ export function useSiteSasani() {
     const said = text.trim().slice(0, 1000);
     if (!said || busy) return;
     setOpen(true);
-    const next: Item[] = [...itemsRef.current, { kind: "me", text: said }];
+    const before = itemsRef.current;
+    const next: Item[] = [...before, { kind: "me", text: said }];
     itemsRef.current = next;
     setItems(next);
     setBusy(true); setSlow(false);
+    // Reading first, then what this message will have her do.
+    setDoing("read");
+    const topic = doingFor(said, before);
+    const doingTimer = setTimeout(() => setDoing(topic), 1500);
     const slowTimer = setTimeout(() => setSlow(true), 7000);
     fetch(`${ADMIN_API}/api/stay/sasani`, {
       method: "POST", headers: { "Content-Type": "application/json" },
@@ -212,10 +223,32 @@ export function useSiteSasani() {
         setItems(p => [...p, { kind: "err", code }]);
       })
       .catch(() => setItems(p => [...p, { kind: "err", code: "error" }]))
-      .finally(() => { clearTimeout(slowTimer); setBusy(false); setSlow(false); });
+      .finally(() => { clearTimeout(doingTimer); clearTimeout(slowTimer); setBusy(false); setSlow(false); });
   }, [busy, setOpen]);
 
-  return { enabled, places, open, setOpen, items, busy, slow, send };
+  return { enabled, places, open, setOpen, items, busy, slow, doing, send };
+}
+
+type Doing = "read" | "rooms" | "making" | "answer";
+
+/**
+ * What Sasani is doing for this message, for the line the guest reads while
+ * they wait — the same reading as kiosk-app's components/sasani-chat.
+ *
+ * Her answer arrives in one piece when she has finished, so the page cannot
+ * watch her tools run; it reads the guest's message instead. A "yes" to her
+ * booking summary is her making the booking; dates, rooms, beds, the house or
+ * prices are her checking what is free; anything else is her finding the
+ * answer — which is true of every message, so a guess that misses still says
+ * nothing false.
+ */
+function doingFor(text: string, before: Item[]): Doing {
+  const lastBot = [...before].reverse().find((x): x is Item & { text: string } => x.kind === "bot" && "text" in x)?.text ?? "";
+  const s = text.normalize().toLowerCase();
+  const asked = /ยืนยันการจอง|shall i book|book it for you/i.test(lastBot);
+  if (asked && /^(ใช่|ยืนยัน|ได้|โอเค|ok|okay|yes|yep|sure|confirm|จอง)/i.test(s.trim())) return "making";
+  if (/ว่าง|ห้อง|เตียง|ดอร์ม|บ้าน|ราคา|กี่บาท|คืน|พรุ่งนี้|วันนี้|เสาร์|อาทิตย์|ศุกร์|จันทร์|อังคาร|พุธ|พฤหัส|สุดสัปดาห์|จอง|\d{1,2}\s*[/.-]\s*\d{1,2}|available|free|room|bed|dorm|house|price|rate|night|tonight|tomorrow|weekend|book/i.test(s)) return "rooms";
+  return "answer";
 }
 export type SiteSasani = ReturnType<typeof useSiteSasani>;
 
@@ -480,8 +513,8 @@ export function SasaniPanel({ s, lang }: { s: SiteSasani; lang: Lang }) {
         })}
         {s.busy && (
           <Bubble bot>
-            <span aria-label={T.typing[lang]}><span className="s-dot" /><span className="s-dot" /><span className="s-dot" /></span>
-            <span className="ml-1.5 text-[0.75rem] text-sann-text-lt">{s.slow ? T.slow[lang] : T.typing[lang]}</span>
+            <span aria-hidden="true"><span className="s-dot" /><span className="s-dot" /><span className="s-dot" /></span>
+            <span role="status" className="ml-1.5 text-[0.75rem] text-sann-text-lt">{T[s.doing][lang]}{s.slow ? T.slowTail[lang] : ""}</span>
           </Bubble>
         )}
       </div>
