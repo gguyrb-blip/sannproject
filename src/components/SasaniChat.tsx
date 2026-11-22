@@ -16,6 +16,7 @@
 // here from site-data, not sent by her, so they cost nothing and never come
 // twice.
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTyping, typingBudget, markFresh, type TypeToken } from "@/lib/typing";
 import { CONTACT, PROPERTIES } from "@/lib/site-data";
 import { readSiteLang } from "@/lib/site-lang";
 
@@ -211,7 +212,8 @@ export function useSiteSasani() {
       .then((j: { ok?: boolean; code?: string; events?: Event[] }) => {
         if (j?.ok && Array.isArray(j.events)) {
           // Cards after the words that introduce them, whatever order they ran in.
-          const words = j.events.filter(e => e.type === "text").map(e => ({ kind: "bot", text: (e as { text: string }).text }) as Item);
+          // Marked fresh: these type themselves out (lib/typing); restored ones don't.
+          const words = j.events.filter(e => e.type === "text").map(e => markFresh({ kind: "bot", text: (e as { text: string }).text } as Item));
           const rest = j.events.filter(e => e.type !== "text").map(e =>
             e.type === "card" ? ({ kind: "card", card: e.card }) as Item : ({ kind: "rooms", rooms: (e as { rooms: Rooms }).rooms }) as Item);
           const add = [...words, ...rest];
@@ -304,11 +306,17 @@ export const SASANI_CSS = `
 `;
 
 /** **bold**, "- " lists and paragraphs — nothing else is rendered. */
-function Said({ text }: { text: string }) {
+/** Her words. A reply that has just arrived (`token` marked fresh) types
+ *  itself out letter by letter — lib/typing; the rest appear whole. */
+function Said({ text, token }: { text: string; token?: TypeToken }) {
+  const limit = useTyping(text, token);
+  const cut = typingBudget(limit);
   const inline = (s: string, k: number) => s.split(/(\*\*[^*]+\*\*)/g).map((p, i) =>
-    p.startsWith("**") && p.endsWith("**") ? <b key={`${k}-${i}`}>{p.slice(2, -2)}</b> : <span key={`${k}-${i}`}>{p}</span>);
+    p.startsWith("**") && p.endsWith("**") ? <b key={`${k}-${i}`}>{cut(p.slice(2, -2))}</b> : <span key={`${k}-${i}`}>{cut(p)}</span>);
   return (
     <>
+      {limit !== Infinity && <span className="sr-only">{text.replace(/\*\*/g, "")}</span>}
+      <div aria-hidden={limit !== Infinity || undefined}>
       {text.split(/\n{2,}/).map((b, bi) => {
         const lines = b.split("\n").filter(l => l.trim());
         if (lines.length && lines.every(l => /^\s*[-•]\s+/.test(l))) {
@@ -320,6 +328,7 @@ function Said({ text }: { text: string }) {
           </p>
         );
       })}
+      </div>
     </>
   );
 }
@@ -500,7 +509,7 @@ export function SasaniPanel({ s, lang }: { s: SiteSasani; lang: Lang }) {
         {s.places.length > 1 && <PlaceCards places={s.places} lang={lang} busy={s.busy} onPick={p => s.send(fill(T.chooseMsg[lang], { name: p.name }), lang)} />}
         {s.items.map((it, i) => {
           if (it.kind === "me") return <Bubble key={i}>{it.text}</Bubble>;
-          if (it.kind === "bot") return <Bubble key={i} bot><Said text={it.text} /></Bubble>;
+          if (it.kind === "bot") return <Bubble key={i} bot><Said text={it.text} token={it} /></Bubble>;
           if (it.kind === "card") return <BookingCard key={i} c={it.card} lang={lang} />;
           if (it.kind === "rooms") return <RoomRail key={i} rooms={it.rooms} lang={lang} named={s.places.length > 1} onBook={name => s.send(fill(T.bookMsg[lang], { name }), lang)} />;
           const human = it.code === "busy" || it.code === "off" || it.code === "refused";
